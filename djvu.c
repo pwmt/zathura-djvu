@@ -3,7 +3,6 @@
 #include <stdlib.h>
 
 #include "djvu.h"
-#include "../../zathura.h"
 
 void
 plugin_register(zathura_document_plugin_t* plugin)

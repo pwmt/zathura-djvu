@@ -4,9 +4,8 @@
 #define DJVU_H
 
 #include <stdbool.h>
+#include <zathura/document.h>
 #include <libdjvu/ddjvuapi.h>
-
-#include "../../document.h"
 
 typedef struct djvu_document_s
 {
