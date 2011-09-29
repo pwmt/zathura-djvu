@@ -27,6 +27,9 @@ djvu_document_open(zathura_document_t* document)
   document->functions.page_links_get            = djvu_page_links_get;
   document->functions.page_form_fields_get      = djvu_page_form_fields_get;
   document->functions.page_render               = djvu_page_render;
+#ifdef HAVE_CAIRO
+  document->functions.page_render_cairo         = djvu_page_render_cairo;
+#endif
   document->functions.page_free                 = djvu_page_free;
 
   document->data = malloc(sizeof(djvu_document_t));
@@ -213,6 +216,51 @@ djvu_page_form_fields_get(zathura_page_t* page)
 {
   return NULL;
 }
+
+#ifdef HAVE_CAIRO
+bool
+djvu_page_render_cairo(zathura_page_t* page, cairo_t* cairo)
+{
+  if (!page || !page->document || !cairo) {
+    return false;
+  }
+
+  /* init ddjvu render data */
+  djvu_document_t* djvu_document = (djvu_document_t*) page->document->data;
+  ddjvu_page_t* djvu_page        = ddjvu_page_create_by_pageno(djvu_document->document, page->number);
+
+  if (!djvu_page) {
+    return false;
+  }
+
+  while (!ddjvu_page_decoding_done(djvu_page));
+
+  unsigned int page_width = 0;
+  unsigned int page_height = 0;
+  if ((page->document->rotate % 180) == 0) {
+    page_width = page->document->scale * page->width;
+    page_height = page->document->scale * page->height;
+  } else {
+    page_width = page->document->scale * page->width;
+    page_height = page->document->scale * page->height;
+  }
+  ddjvu_rect_t rrect = { 0, 0, page_width, page_height };
+  ddjvu_rect_t prect = { 0, 0, page_width, page_height };
+
+  /* set rotation */
+  ddjvu_page_set_rotation(djvu_page, page->document->rotate / 90);
+
+  cairo_surface_t* surface = cairo_get_target(cairo);
+  char* data = (char*)cairo_image_surface_get_data(surface);
+
+  /* render page */
+  ddjvu_page_render(djvu_page, DDJVU_RENDER_COLOR, &prect, &rrect, djvu_document->format,
+      cairo_image_surface_get_stride(surface), data);
+  ddjvu_page_release(djvu_page);
+
+  return true;
+}
+#endif
 
 zathura_image_buffer_t*
 djvu_page_render(zathura_page_t* page)
