@@ -11,7 +11,6 @@ ifneq "$(WITH_CAIRO)" "0"
 CFLAGS += -DHAVE_CAIRO
 endif
 
-
 all: options ${PLUGIN}
 
 options:

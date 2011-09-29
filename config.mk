@@ -4,11 +4,14 @@
 PREFIX ?= /usr
 
 # libs
-DJVU_INC ?= $(shell pkg-config --cflags gtk+-2.0 ddjvuapi)
-DJVU_LIB ?= $(shell pkg-config --libs gtk+-2.0 ddjvuapi)
+GTK_INC ?= $(shell pkg-config --cflags gtk+-2.0)
+GTK_LIB ?= $(shell pkg-config --libs gtk+-2.0)
 
-INCS = -I. -I/usr/include ${DJVU_INC}
-LIBS = ${DJVU_LIB}
+DJVU_INC ?= $(shell pkg-config --cflags ddjvuapi)
+DJVU_LIB ?= $(shell pkg-config --libs ddjvuapi)
+
+INCS = -I. -I/usr/include ${GTK_INC} ${DJVU_INC}
+LIBS = ${GTK_LIB} ${DJVU_LIB}
 
 # flags
 CFLAGS += -std=c99 -fPIC -pedantic -Wall -Wno-format-zero-length $(INCS)
