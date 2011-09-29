@@ -7,7 +7,7 @@
 void
 plugin_register(zathura_document_plugin_t* plugin)
 {
-  girara_list_append(plugin->content_types, g_content_type_from_mime_type("application/vnd.djvu"));
+  girara_list_append(plugin->content_types, g_content_type_from_mime_type("image/vnd.djvu"));
   plugin->open_function  = djvu_document_open;
 }
 
