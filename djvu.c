@@ -43,7 +43,8 @@ djvu_document_open(zathura_document_t* document)
   djvu_document->format   = NULL;
 
   /* setup format */
-  djvu_document->format = ddjvu_format_create(DDJVU_FORMAT_RGB24, 0, NULL);
+  static unsigned int masks[4] = {0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000};
+  djvu_document->format = ddjvu_format_create(DDJVU_FORMAT_RGBMASK32, 4, masks);
 
   if (djvu_document->format == NULL) {
     goto error_free;
