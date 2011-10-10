@@ -10,7 +10,10 @@ GTK_LIB ?= $(shell pkg-config --libs gtk+-2.0)
 DJVU_INC ?= $(shell pkg-config --cflags ddjvuapi)
 DJVU_LIB ?= $(shell pkg-config --libs ddjvuapi)
 
-INCS = -I. -I/usr/include ${GTK_INC} ${DJVU_INC}
+GIRARA_INC ?= $(shell pkg-config --cflags girara-gtk2)
+ZATHURA_INC ?= $(shell pkg-config --cflags zathura)
+
+INCS = ${GTK_INC} ${DJVU_INC} ${ZATHURA_INC} ${GIRARA_INC}
 LIBS = ${GTK_LIB} ${DJVU_LIB}
 
 # flags
