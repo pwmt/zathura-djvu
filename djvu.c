@@ -243,20 +243,6 @@ djvu_page_render_cairo(zathura_page_t* page, cairo_t* cairo)
 
   while (!ddjvu_page_decoding_done(djvu_page));
 
-  unsigned int page_width  = 0;
-  unsigned int page_height = 0;
-
-  if ((page->document->rotate % 180) == 0) {
-    page_width  = page->document->scale * page->width;
-    page_height = page->document->scale * page->height;
-  } else {
-    page_width  = page->document->scale * page->height;
-    page_height = page->document->scale * page->width;
-  }
-
-  ddjvu_rect_t rrect = { 0, 0, page_width, page_height };
-  ddjvu_rect_t prect = { 0, 0, page_width, page_height };
-
   /* set rotation */
   ddjvu_page_set_rotation(djvu_page, page->document->rotate / 90);
 
@@ -267,6 +253,12 @@ djvu_page_render_cairo(zathura_page_t* page, cairo_t* cairo)
     return false;
   }
 
+  unsigned int page_width  = cairo_image_surface_get_width(surface);
+  unsigned int page_height = cairo_image_surface_get_height(surface);;
+
+  ddjvu_rect_t rrect = { 0, 0, page_width, page_height };
+  ddjvu_rect_t prect = { 0, 0, page_width, page_height };
+
   char* data = (char*) cairo_image_surface_get_data(surface);
 
   if (data == NULL) {
@@ -275,8 +267,8 @@ djvu_page_render_cairo(zathura_page_t* page, cairo_t* cairo)
   }
 
   /* render page */
-  ddjvu_page_render(djvu_page, DDJVU_RENDER_COLOR, &prect, &rrect, djvu_document->format,
-      cairo_image_surface_get_stride(surface), data);
+  ddjvu_page_render(djvu_page, DDJVU_RENDER_COLOR, &prect, &rrect,
+      djvu_document->format, cairo_image_surface_get_stride(surface), data);
 
   ddjvu_page_release(djvu_page);
 
