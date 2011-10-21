@@ -156,7 +156,7 @@ djvu_document_save_as(zathura_document_t* document, const char* path)
   return true;
 }
 
-zathura_list_t*
+girara_list_t*
 djvu_document_attachments_get(zathura_document_t* document)
 {
   return NULL;
@@ -208,19 +208,19 @@ djvu_page_free(zathura_page_t* page)
   return true;
 }
 
-zathura_list_t*
+girara_list_t*
 djvu_page_search_text(zathura_page_t* page, const char* text)
 {
   return NULL;
 }
 
-zathura_list_t*
+girara_list_t*
 djvu_page_links_get(zathura_page_t* page)
 {
   return NULL;
 }
 
-zathura_list_t*
+girara_list_t*
 djvu_page_form_fields_get(zathura_page_t* page)
 {
   return NULL;
