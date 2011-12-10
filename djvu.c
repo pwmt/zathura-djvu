@@ -245,9 +245,6 @@ djvu_page_render_cairo(zathura_page_t* page, cairo_t* cairo)
 
   while (!ddjvu_page_decoding_done(djvu_page));
 
-  /* set rotation */
-  ddjvu_page_set_rotation(djvu_page, page->document->rotate / 90);
-
   cairo_surface_t* surface = cairo_get_target(cairo);
 
   if (surface == NULL) {
