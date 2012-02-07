@@ -229,7 +229,7 @@ djvu_page_form_fields_get(zathura_page_t* page)
 
 #ifdef HAVE_CAIRO
 bool
-djvu_page_render_cairo(zathura_page_t* page, cairo_t* cairo)
+djvu_page_render_cairo(zathura_page_t* page, cairo_t* cairo, bool GIRARA_UNUSED(printing))
 {
   if (page == NULL || page->document == NULL || cairo == NULL) {
     return false;

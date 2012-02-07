@@ -28,7 +28,7 @@ girara_list_t* djvu_page_links_get(zathura_page_t* page);
 girara_list_t* djvu_page_form_fields_get(zathura_page_t* page);
 zathura_image_buffer_t* djvu_page_render(zathura_page_t* page);
 #ifdef HAVE_CAIRO
-bool djvu_page_render_cairo(zathura_page_t* page, cairo_t* cairo);
+bool djvu_page_render_cairo(zathura_page_t* page, cairo_t* cairo, bool printing);
 #endif
 bool djvu_page_free(zathura_page_t* page);
 
