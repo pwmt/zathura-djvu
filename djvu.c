@@ -212,7 +212,7 @@ djvu_page_free(zathura_page_t* page)
 
 #ifdef HAVE_CAIRO
 zathura_plugin_error_t
-djvu_page_render_cairo(zathura_page_t* page, cairo_t* cairo, bool printing)
+djvu_page_render_cairo(zathura_page_t* page, cairo_t* cairo, bool GIRARA_UNUSED(printing))
 {
   if (page == NULL || page->document == NULL || cairo == NULL) {
     return ZATHURA_PLUGIN_ERROR_INVALID_ARGUMENTS;
