@@ -10,26 +10,82 @@
 #include <cairo.h>
 #endif
 
+/**
+ * DjVu document
+ */
 typedef struct djvu_document_s
 {
-  ddjvu_context_t*  context;
-  ddjvu_document_t* document;
-  ddjvu_format_t*   format;
+  ddjvu_context_t*  context; /**< Document context */
+  ddjvu_document_t* document; /**< Document */
+  ddjvu_format_t*   format; /**< Format */
 } djvu_document_t;
 
-bool djvu_document_open(zathura_document_t* document);
-bool djvu_document_free(zathura_document_t* document);
-girara_tree_node_t* djvu_document_index_generate(zathura_document_t* document);
-bool djvu_document_save_as(zathura_document_t* document, const char* path);
-girara_list_t* djvu_document_attachments_get(zathura_document_t* document);
-zathura_page_t* djvu_page_get(zathura_document_t* document, unsigned int page);
-girara_list_t* djvu_page_search_text(zathura_page_t* page, const char* text);
-girara_list_t* djvu_page_links_get(zathura_page_t* page);
-girara_list_t* djvu_page_form_fields_get(zathura_page_t* page);
-zathura_image_buffer_t* djvu_page_render(zathura_page_t* page);
+/**
+ * Open a DjVU document
+ *
+ * @param document Zathura document
+ * @return ZATHURA_PLUGIN_ERROR_OK when no error occured, otherwise see \ref
+ *    zathura_plugin_error_t
+ */
+zathura_plugin_error_t djvu_document_open(zathura_document_t* document);
+
+/**
+ * Closes and frees the internal document structure
+ *
+ * @param document Zathura document
+ * @return ZATHURA_PLUGIN_ERROR_OK when no error occured, otherwise see \ref
+ *    zathura_plugin_error_t
+ */
+zathura_plugin_error_t djvu_document_free(zathura_document_t* document);
+
+/**
+ * Saves the document to the given path
+ *
+ * @param document Zathura document
+ * @param path File path
+ * @return ZATHURA_PLUGIN_ERROR_OK when no error occured, otherwise see \ref
+ *    zathura_plugin_error_t
+ */
+zathura_plugin_error_t djvu_document_save_as(zathura_document_t* document, const char* path);
+
+/**
+ * Returns a reference to a page
+ *
+ * @param document Zathura document
+ * @param page Page number
+ * @return A page object or NULL if an error occurred
+ */
+zathura_page_t* djvu_page_get(zathura_document_t* document, unsigned int page, zathura_plugin_error_t* error);
+
+/**
+ * Frees a DjVu page
+ *
+ * @param page Page
+ * @return ZATHURA_PLUGIN_ERROR_OK when no error occured, otherwise see \ref
+ *    zathura_plugin_error_t
+ */
+zathura_plugin_error_t djvu_page_free(zathura_page_t* page);
+
+/**
+ * Renders a page and returns a allocated image buffer which has to be freed
+ * with zathura_image_buffer_free
+ *
+ * @param page Page
+ * @return Image buffer or NULL if an error occurred
+ */
+zathura_image_buffer_t* djvu_page_render(zathura_page_t* page, zathura_plugin_error_t* error);
+
 #ifdef HAVE_CAIRO
-bool djvu_page_render_cairo(zathura_page_t* page, cairo_t* cairo);
+/**
+ * Renders a page onto a cairo object
+ *
+ * @param page Page
+ * @param cairo Cairo object
+ * @param printing Set to true if page should be rendered for printing
+ * @return ZATHURA_PLUGIN_ERROR_OK when no error occured, otherwise see \ref
+ *    zathura_plugin_error_t
+ */
+zathura_plugin_error_t djvu_page_render_cairo(zathura_page_t* page, cairo_t* cairo, bool printing);
 #endif
-bool djvu_page_free(zathura_page_t* page);
 
 #endif // DJVU_H
