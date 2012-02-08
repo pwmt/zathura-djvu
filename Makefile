@@ -35,7 +35,7 @@ ${DOBJECTS}: config.mk
 
 ${PLUGIN}: ${OBJECTS}
 	@echo LD $@
-	${CC} -shared -Wl,--retain-symbols-file=symbols ${LDFLAGS} -o ${PLUGIN}.so $(OBJECTS) ${LIBS}
+	${CC} -shared ${LDFLAGS} -o ${PLUGIN}.so $(OBJECTS) ${LIBS}
 
 ${PLUGIN}-debug: ${DOBJECTS}
 	@echo LD $@
