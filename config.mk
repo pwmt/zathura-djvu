@@ -14,6 +14,8 @@ DJVU_LIB ?= $(shell pkg-config --libs ddjvuapi)
 
 GIRARA_INC ?= $(shell pkg-config --cflags girara-gtk2)
 ZATHURA_INC ?= $(shell pkg-config --cflags zathura)
+PLUGINDIR ?= $(shell pkg-config --variable=plugindir zathura)
+PLUGINDIR ?= ${PREFIX}/lib/zathura
 
 INCS = ${GTK_INC} ${DJVU_INC} ${ZATHURA_INC} ${GIRARA_INC}
 LIBS = ${GTK_LIB} ${DJVU_LIB}
