@@ -13,8 +13,8 @@ DJVU_INC ?= $(shell pkg-config --cflags ddjvuapi)
 DJVU_LIB ?= $(shell pkg-config --libs ddjvuapi)
 
 GIRARA_INC ?= $(shell pkg-config --cflags girara-gtk2)
-GIRARA_LIB ?= $(shell pkg-config --libs girara-gtk2
-)
+GIRARA_LIB ?= $(shell pkg-config --libs girara-gtk2)
+
 ZATHURA_INC ?= $(shell pkg-config --cflags zathura)
 PLUGINDIR ?= $(shell pkg-config --variable=plugindir zathura)
 PLUGINDIR ?= ${PREFIX}/lib/zathura
