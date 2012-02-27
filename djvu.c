@@ -259,6 +259,8 @@ djvu_page_search_text(zathura_page_t* page, const char* text, zathura_plugin_err
     goto error_free;
   }
 
+  djvu_page_text_free(page_text);
+
   return NULL;
 
 error_free:
