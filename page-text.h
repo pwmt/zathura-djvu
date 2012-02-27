@@ -3,6 +3,9 @@
 #ifndef DJVU_PAGE_H
 #define DJVU_PAGE_H
 
+#include <girara/datastructures.h>
+#include <zathura/document.h>
+
 #include "djvu.h"
 
 /**
@@ -14,6 +17,8 @@ typedef struct djvu_page_text_s {
   miniexp_t begin; /**< Begin index */
   miniexp_t end; /**< End index */
   djvu_document_t* document; /**< Correspondening document */
+  girara_list_t* text_positions; /**< Position/Expression duple */
+  zathura_rectangle_t* rectangle; /**< Rectangle */
 } djvu_page_text_t;
 
 /**
