@@ -247,8 +247,6 @@ djvu_page_search_text(zathura_page_t* page, const char* text, zathura_plugin_err
 
   djvu_document_t* djvu_document = (djvu_document_t*) page->document->data;
 
-  fprintf(stderr, "%d\n", page->number);
-
   djvu_page_text_t* page_text = djvu_page_text_new(djvu_document, page->number);
   if (page_text == NULL) {
     goto error_ret;
