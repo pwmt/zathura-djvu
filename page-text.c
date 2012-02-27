@@ -36,6 +36,8 @@ djvu_page_text_new(djvu_document_t* document, unsigned int page_number)
     goto error_free;
   }
 
+  return page_text;
+
 error_free:
 
   if (page_text != NULL) {
