@@ -6,28 +6,9 @@
 
 #include "djvu.h"
 
-static const char*
-get_extension(const char* path)
-{
-  if (path == NULL) {
-    return NULL;
-  }
-
-  unsigned int i = strlen(path);
-  for (; i > 0; i--) {
-    if (*(path + i) != '.') {
-      continue;
-    } else {
-      break;
-    }
-  }
-
-  if (i == 0) {
-    return NULL;
-  }
-
-  return path + i + 1;
-}
+/* forward declarations */
+static const char* get_extension(const char* path);
+static void handle_messages(djvu_document_t* document, bool wait);
 
 void
 plugin_register(zathura_document_plugin_t* plugin)
@@ -114,6 +95,7 @@ djvu_document_open(zathura_document_t* document)
 
   /* decoding error */
   if (ddjvu_document_decoding_error(djvu_document->document)) {
+    handle_messages(djvu_document, true);
     error = ZATHURA_PLUGIN_ERROR_UNKNOWN;
     goto error_free;
   }
@@ -177,7 +159,9 @@ djvu_document_save_as(zathura_document_t* document, const char* path)
 
   if (extension != NULL && g_strcmp0(extension, "ps") == 0) {
     ddjvu_job_t* job = ddjvu_document_print(djvu_document->document, fp, 0, NULL);
-    while (ddjvu_job_done(job) != true);
+    while (ddjvu_job_done(job) != true) {
+      handle_messages(djvu_document->document, true);
+    }
   } else {
     ddjvu_document_save(djvu_document->document, fp, 0, NULL);
   }
@@ -214,13 +198,18 @@ djvu_page_get(zathura_document_t* document, unsigned int page, zathura_plugin_er
   ddjvu_pageinfo_t page_info;
 
   while ((status = ddjvu_document_get_pageinfo(djvu_document->document, page,
-          &page_info)) < DDJVU_JOB_OK);
+          &page_info)) < DDJVU_JOB_OK) {
+    handle_messages(djvu_document->document, true);
+  }
 
   if (status >= DDJVU_JOB_FAILED) {
+    handle_messages(djvu_document->document, true);
     free(document_page);
+
     if (error != NULL) {
       *error = ZATHURA_PLUGIN_ERROR_UNKNOWN;
     }
+
     return NULL;
   }
 
@@ -258,7 +247,9 @@ djvu_page_render_cairo(zathura_page_t* page, cairo_t* cairo, bool GIRARA_UNUSED(
     return ZATHURA_PLUGIN_ERROR_UNKNOWN;
   }
 
-  while (!ddjvu_page_decoding_done(djvu_page));
+  while (!ddjvu_page_decoding_done(djvu_page)) {
+    handle_messages(djvu_document->document, true);
+  }
 
   cairo_surface_t* surface = cairo_get_target(cairo);
 
@@ -323,7 +314,9 @@ djvu_page_render(zathura_page_t* page, zathura_plugin_error_t* error)
     goto error_out;
   }
 
-  while (!ddjvu_page_decoding_done(djvu_page));
+  while (!ddjvu_page_decoding_done(djvu_page)) {
+    handle_messages(djvu_document->document, true);
+  }
 
   ddjvu_rect_t rrect = { 0, 0, page_width, page_height };
   ddjvu_rect_t prect = { 0, 0, page_width, page_height };
@@ -355,4 +348,45 @@ error_free:
 error_out:
 
   return NULL;
+}
+
+static const char*
+get_extension(const char* path)
+{
+  if (path == NULL) {
+    return NULL;
+  }
+
+  unsigned int i = strlen(path);
+  for (; i > 0; i--) {
+    if (*(path + i) != '.') {
+      continue;
+    } else {
+      break;
+    }
+  }
+
+  if (i == 0) {
+    return NULL;
+  }
+
+  return path + i + 1;
+}
+
+static void handle_messages(djvu_document_t* document, bool wait)
+{
+  if (document == NULL || document->context == NULL) {
+    return;
+  }
+
+  ddjvu_context_t* context = document->context;
+  const ddjvu_message_t* message;
+
+  if (wait == true) {
+    ddjvu_message_wait(context);
+  }
+
+  while ((message = ddjvu_message_peek(context)) != NULL) {
+    ddjvu_message_pop(context);
+  }
 }
