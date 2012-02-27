@@ -6,8 +6,8 @@ VERSION = 0.0.1
 PREFIX ?= /usr
 
 # libs
-GTK_INC ?= $(shell pkg-config --cflags gtk+-2.0)
-GTK_LIB ?= $(shell pkg-config --libs gtk+-2.0)
+GLIB_INC ?= $(shell pkg-config --cflags glib-2.0)
+GLIB_LIB ?= $(shell pkg-config --libs glib-2.0)
 
 DJVU_INC ?= $(shell pkg-config --cflags ddjvuapi)
 DJVU_LIB ?= $(shell pkg-config --libs ddjvuapi)
@@ -19,8 +19,8 @@ ZATHURA_INC ?= $(shell pkg-config --cflags zathura)
 PLUGINDIR ?= $(shell pkg-config --variable=plugindir zathura)
 PLUGINDIR ?= ${PREFIX}/lib/zathura
 
-INCS = ${GTK_INC} ${DJVU_INC} ${ZATHURA_INC} ${GIRARA_INC}
-LIBS = ${GIRARA_LIB} ${GTK_LIB} ${DJVU_LIB}
+INCS = ${GLIB_INC} ${DJVU_INC} ${ZATHURA_INC} ${GIRARA_INC}
+LIBS = ${GIRARA_LIB} ${GLIB_LIB} ${DJVU_LIB}
 
 # flags
 CFLAGS += -std=c99 -fPIC -pedantic -Wall -Wno-format-zero-length $(INCS)

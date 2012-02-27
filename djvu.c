@@ -3,12 +3,14 @@
 #include <stdlib.h>
 #include <girara/datastructures.h>
 #include <string.h>
+#include <libdjvu/miniexp.h>
 
 #include "djvu.h"
+#include "page-text.h"
+#include "internal.h"
 
 /* forward declarations */
 static const char* get_extension(const char* path);
-static void handle_messages(djvu_document_t* document, bool wait);
 
 void
 plugin_register(zathura_document_plugin_t* plugin)
@@ -30,6 +32,7 @@ djvu_document_open(zathura_document_t* document)
   document->functions.document_free             = djvu_document_free;
   document->functions.document_save_as          = djvu_document_save_as;
   document->functions.page_get                  = djvu_page_get;
+  document->functions.page_search_text          = djvu_page_search_text;
   document->functions.page_render               = djvu_page_render;
 #ifdef HAVE_CAIRO
   document->functions.page_render_cairo         = djvu_page_render_cairo;
@@ -231,6 +234,48 @@ djvu_page_free(zathura_page_t* page)
   return ZATHURA_PLUGIN_ERROR_OK;
 }
 
+girara_list_t*
+djvu_page_search_text(zathura_page_t* page, const char* text, zathura_plugin_error_t* error)
+{
+  if (page == NULL || text == NULL || strlen(text) == 0
+      || page->document->data == NULL) {
+    if (error != NULL) {
+      *error = ZATHURA_PLUGIN_ERROR_INVALID_ARGUMENTS;
+    }
+    goto error_ret;
+  }
+
+  djvu_document_t* djvu_document = (djvu_document_t*) page->document->data;
+
+  fprintf(stderr, "%d\n", page->number);
+
+  djvu_page_text_t* page_text = djvu_page_text_new(djvu_document, page->number);
+  if (page_text == NULL) {
+    goto error_ret;
+  }
+
+  girara_list_t* results = djvu_page_text_search(page_text, text);
+  if (results == NULL) {
+    goto error_free;
+  }
+
+  return NULL;
+
+error_free:
+
+  if (page_text != NULL) {
+    djvu_page_text_free(page_text);
+  }
+
+error_ret:
+
+  if (error != NULL && *error == ZATHURA_PLUGIN_ERROR_OK) {
+    *error = ZATHURA_PLUGIN_ERROR_UNKNOWN;
+  }
+
+  return NULL;
+}
+
 #ifdef HAVE_CAIRO
 zathura_plugin_error_t
 djvu_page_render_cairo(zathura_page_t* page, cairo_t* cairo, bool GIRARA_UNUSED(printing))
@@ -373,7 +418,8 @@ get_extension(const char* path)
   return path + i + 1;
 }
 
-static void handle_messages(djvu_document_t* document, bool wait)
+void
+handle_messages(djvu_document_t* document, bool wait)
 {
   if (document == NULL || document->context == NULL) {
     return;

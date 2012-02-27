@@ -69,6 +69,17 @@ zathura_page_t* djvu_page_get(zathura_document_t* document, unsigned int page, z
 zathura_plugin_error_t djvu_page_free(zathura_page_t* page);
 
 /**
+ * Searches for a specific text on a page and returns a list of results
+ *
+ * @param page Page
+ * @param text Search item
+ * @param error Set to an error value (see zathura_plugin_error_t) if an
+ *   error occured
+ * @return List of search results or NULL if an error occurred
+ */
+girara_list_t* djvu_page_search_text(zathura_page_t* page, const char* text, zathura_plugin_error_t* error);
+
+/**
  * Renders a page and returns a allocated image buffer which has to be freed
  * with zathura_image_buffer_free
  *
