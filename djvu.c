@@ -2,8 +2,32 @@
 
 #include <stdlib.h>
 #include <girara/datastructures.h>
+#include <string.h>
 
 #include "djvu.h"
+
+static const char*
+get_extension(const char* path)
+{
+  if (path == NULL) {
+    return NULL;
+  }
+
+  unsigned int i = strlen(path);
+  for (; i > 0; i--) {
+    if (*(path + i) != '.') {
+      continue;
+    } else {
+      break;
+    }
+  }
+
+  if (i == 0) {
+    return NULL;
+  }
+
+  return path + i + 1;
+}
 
 void
 plugin_register(zathura_document_plugin_t* plugin)
@@ -149,7 +173,15 @@ djvu_document_save_as(zathura_document_t* document, const char* path)
     return ZATHURA_PLUGIN_ERROR_UNKNOWN;
   }
 
-  ddjvu_document_save(djvu_document->document, fp, 0, NULL);
+  const char* extension = get_extension(path);
+
+  if (extension != NULL && g_strcmp0(extension, "ps") == 0) {
+    ddjvu_job_t* job = ddjvu_document_print(djvu_document->document, fp, 0, NULL);
+    while (ddjvu_job_done(job) != true);
+  } else {
+    ddjvu_document_save(djvu_document->document, fp, 0, NULL);
+  }
+
   fclose(fp);
 
   return ZATHURA_PLUGIN_ERROR_OK;
