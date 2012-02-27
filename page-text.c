@@ -123,5 +123,8 @@ djvu_text_page_content_append(djvu_page_text_t* page_text, miniexp_t exp)
     } else {
       djvu_text_page_content_append(page_text, data);
     }
+
+    /* move to next object */
+    inner = miniexp_cdr(inner);
   }
 }
