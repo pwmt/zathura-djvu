@@ -12,6 +12,8 @@ DOBJECTS = ${SOURCE:.c=.do}
 
 ifneq "$(WITH_CAIRO)" "0"
 CPPFLAGS += -DHAVE_CAIRO
+INCS += $(CAIRO_INC)
+LIBS += $(CAIRO_LIB)
 endif
 
 all: options ${PLUGIN}

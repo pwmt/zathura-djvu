@@ -6,6 +6,9 @@ VERSION = 0.0.1
 PREFIX ?= /usr
 
 # libs
+CAIRO_INC ?= $(shell pkg-config --cflags cairo)
+CAIRO_LIB ?= $(shell pkg-config --libs cairo)
+
 GLIB_INC ?= $(shell pkg-config --cflags glib-2.0)
 GLIB_LIB ?= $(shell pkg-config --libs glib-2.0)
 
@@ -19,7 +22,7 @@ ZATHURA_INC ?= $(shell pkg-config --cflags zathura)
 PLUGINDIR ?= $(shell pkg-config --variable=plugindir zathura)
 PLUGINDIR ?= ${PREFIX}/lib/zathura
 
-INCS = ${GLIB_INC} ${DJVU_INC} ${ZATHURA_INC} ${GIRARA_INC}
+INCS = ${GIRARA_INC} ${GLIB_INC} ${DJVU_INC} ${ZATHURA_INC}
 LIBS = ${GIRARA_LIB} ${GLIB_LIB} ${DJVU_LIB}
 
 # flags
