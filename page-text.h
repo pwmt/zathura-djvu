@@ -14,11 +14,14 @@
 typedef struct djvu_page_text_s {
   miniexp_t text_information; /**< Text by ddjvu_document_get_pagetext */
   char* content; /**< Actual content */
+
   miniexp_t begin; /**< Begin index */
   miniexp_t end; /**< End index */
-  djvu_document_t* document; /**< Correspondening document */
   girara_list_t* text_positions; /**< Position/Expression duple */
   zathura_rectangle_t* rectangle; /**< Rectangle */
+
+  djvu_document_t* document; /**< Correspondening document */
+  zathura_page_t* page; /**< Correspondening page */
 } djvu_page_text_t;
 
 /**
@@ -28,7 +31,7 @@ typedef struct djvu_page_text_s {
  * @param page_number The number of the page
  * @return The page object or NULL if an error occured
  */
-djvu_page_text_t* djvu_page_text_new(djvu_document_t* document, unsigned int page_number);
+djvu_page_text_t* djvu_page_text_new(djvu_document_t* document, zathura_page_t* page);
 
 /**
  * Frees a djvu page object

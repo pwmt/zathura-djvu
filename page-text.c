@@ -23,9 +23,9 @@ static bool djvu_page_text_build_rectangle_process(djvu_page_text_t* page_text,
     miniexp_t exp, miniexp_t start, miniexp_t end);
 
 djvu_page_text_t*
-djvu_page_text_new(djvu_document_t* document, unsigned int page_number)
+djvu_page_text_new(djvu_document_t* document, zathura_page_t* page)
 {
-  if (document == NULL || document->document == NULL) {
+  if (document == NULL || document->document == NULL || page == NULL) {
     goto error_ret;
   }
 
@@ -38,9 +38,10 @@ djvu_page_text_new(djvu_document_t* document, unsigned int page_number)
   page_text->begin            = miniexp_nil;
   page_text->end              = miniexp_nil;
   page_text->document         = document;
+  page_text->page             = page;
 
   /* read page text */
-  while ((page_text->text_information = ddjvu_document_get_pagetext(document->document, page_number,
+  while ((page_text->text_information = ddjvu_document_get_pagetext(document->document, page->number,
           "char")) == miniexp_dummy) {
     handle_messages(document, true);
   }
@@ -86,19 +87,26 @@ djvu_page_text_search(djvu_page_text_t* page_text, const char* text)
     page_text->content = NULL;
   }
 
+  /* create result list */
+  girara_list_t* results = girara_list_new2(
+      (girara_free_function_t) free);
+  if (results == NULL) {
+    goto error_ret;
+  }
+
   /* create list */
   page_text->text_positions = girara_list_new2(
       (girara_free_function_t) free);
 
   if (page_text->text_positions == NULL) {
-    goto error_ret;
+    goto error_free;
   }
 
   /* get page content */
   djvu_page_text_content_append(page_text, page_text->text_information);
 
   if (page_text->content == NULL || strlen(page_text->content) == 0) {
-    goto error_ret;
+    goto error_free;
   }
 
   /* search through content */
@@ -125,11 +133,34 @@ djvu_page_text_search(djvu_page_text_t* page_text, const char* text)
       continue;
     }
 
+    /* add rectangle to result list */
+    girara_list_append(results, page_text->rectangle);
+    page_text->rectangle = NULL;
+
     tmp += search_length;
   }
 
+  /* clean up */
   girara_list_free(page_text->text_positions);
   page_text->text_positions = NULL;
+
+  if (girara_list_size(results) == 0) {
+    girara_list_free(results);
+    return NULL;
+  }
+
+  return results;
+
+error_free:
+
+  if (page_text->text_positions) {
+    girara_list_free(page_text->text_positions);
+  }
+
+  if (page_text->content != NULL) {
+    g_free(page_text->content);
+    page_text->content = NULL;
+  }
 
 error_ret:
 
@@ -198,7 +229,7 @@ text_position_get_exp(djvu_page_text_t* page_text, unsigned int index)
   int m = 0;
   int h = girara_list_size(page_text->text_positions) - 1;
 
-  if (h >= 0) {
+  if (h < 0) {
     goto error_ret;
   }
 
@@ -207,7 +238,7 @@ text_position_get_exp(djvu_page_text_t* page_text, unsigned int index)
 
     text_position_t* text_position = girara_list_nth(page_text->text_positions, m);
     if (text_position == NULL) {
-      return miniexp_nil;
+      goto error_ret;
     }
 
     if (text_position->position == index) {
@@ -239,41 +270,39 @@ djvu_page_text_build_rectangle_process(djvu_page_text_t* page_text, miniexp_t ex
     goto error_ret;
   }
 
-  if (page_text->rectangle != NULL || exp == start) {
-    int x1 = miniexp_to_int(miniexp_nth(1, exp));
-    int y1 = miniexp_to_int(miniexp_nth(2, exp));
-    int x2 = miniexp_to_int(miniexp_nth(3, exp));
-    int y2 = miniexp_to_int(miniexp_nth(4, exp));
+  int x1 = miniexp_to_int(miniexp_nth(1, exp));
+  int y1 = miniexp_to_int(miniexp_nth(2, exp));
+  int x2 = miniexp_to_int(miniexp_nth(3, exp));
+  int y2 = miniexp_to_int(miniexp_nth(4, exp));
 
-    if (page_text->rectangle != NULL) {
-      if (x1 < page_text->rectangle->x1) {
-        page_text->rectangle->x1 = x1;
-      }
-
-      if (x2 > page_text->rectangle->x2) {
-        page_text->rectangle->x2 = x2;
-      }
-
-      if (y1 < page_text->rectangle->y1) {
-        page_text->rectangle->y1 = y1;
-      }
-
-      if (y2 > page_text->rectangle->y2) {
-        page_text->rectangle->y2 = y2;
-      }
-    } else {
-      zathura_rectangle_t* rectangle = calloc(1, sizeof(zathura_rectangle_t));
-      if (rectangle == NULL) {
-        goto error_ret;
-      }
-
-      rectangle->x1 = x1;
-      rectangle->x2 = x2;
-      rectangle->y1 = y1;
-      rectangle->y2 = y2;
-
-      page_text->rectangle = rectangle;
+  if (page_text->rectangle != NULL) {
+    if (x1 < page_text->rectangle->x1) {
+      page_text->rectangle->x1 = x1;
     }
+
+    if (x2 > page_text->rectangle->x2) {
+      page_text->rectangle->x2 = x2;
+    }
+
+    if (y1 < page_text->rectangle->y1) {
+      page_text->rectangle->y1 = y1;
+    }
+
+    if (y2 > page_text->rectangle->y2) {
+      page_text->rectangle->y2 = y2;
+    }
+  } else {
+    zathura_rectangle_t* rectangle = calloc(1, sizeof(zathura_rectangle_t));
+    if (rectangle == NULL) {
+      goto error_ret;
+    }
+
+    rectangle->x1 = x1;
+    rectangle->x2 = x2;
+    rectangle->y1 = y1;
+    rectangle->y2 = y2;
+
+    page_text->rectangle = rectangle;
   }
 
   return (exp == end) ? false : true;
@@ -301,7 +330,7 @@ djvu_page_text_build_rectangle(djvu_page_text_t* page_text, miniexp_t exp,
 
     if (miniexp_stringp(data) != 0) {
       if (djvu_page_text_build_rectangle_process(page_text,
-            page_text->text_information, start, end) == false) {
+            exp, start, end) == false) {
         goto error_ret;
       }
     } else {
