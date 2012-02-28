@@ -270,42 +270,45 @@ djvu_page_text_build_rectangle_process(djvu_page_text_t* page_text, miniexp_t ex
     goto error_ret;
   }
 
-  int x1 = miniexp_to_int(miniexp_nth(1, exp));
-  int y1 = miniexp_to_int(miniexp_nth(2, exp));
-  int x2 = miniexp_to_int(miniexp_nth(3, exp));
-  int y2 = miniexp_to_int(miniexp_nth(4, exp));
-
-  if (page_text->rectangle != NULL) {
-    if (x1 < page_text->rectangle->x1) {
-      page_text->rectangle->x1 = x1;
-    }
-
-    if (x2 > page_text->rectangle->x2) {
-      page_text->rectangle->x2 = x2;
-    }
-
-    if (y1 < page_text->rectangle->y1) {
-      page_text->rectangle->y1 = y1;
-    }
-
-    if (y2 > page_text->rectangle->y2) {
-      page_text->rectangle->y2 = y2;
-    }
-  } else {
+  if (page_text->rectangle != NULL || exp == start) {
     zathura_rectangle_t* rectangle = calloc(1, sizeof(zathura_rectangle_t));
     if (rectangle == NULL) {
       goto error_ret;
     }
 
-    rectangle->x1 = x1;
-    rectangle->x2 = x2;
-    rectangle->y1 = y1;
-    rectangle->y2 = y2;
+    rectangle->x1 = miniexp_to_int(miniexp_nth(1, exp));
+    rectangle->y1 = miniexp_to_int(miniexp_nth(2, exp));
+    rectangle->x2 = miniexp_to_int(miniexp_nth(3, exp));
+    rectangle->y2 = miniexp_to_int(miniexp_nth(4, exp));
 
-    page_text->rectangle = rectangle;
+    if (page_text->rectangle != NULL) {
+      if (rectangle->x1 < page_text->rectangle->x1) {
+        page_text->rectangle->x1 = rectangle->x1;
+      }
+
+      if (rectangle->x2 > page_text->rectangle->x2) {
+        page_text->rectangle->x2 = rectangle->x2;
+      }
+
+      if (rectangle->y1 < page_text->rectangle->y1) {
+        page_text->rectangle->y1 = rectangle->y1;
+      }
+
+      if (rectangle->y2 > page_text->rectangle->y2) {
+        page_text->rectangle->y2 = rectangle->y2;
+      }
+
+      free(rectangle);
+    } else {
+      page_text->rectangle = rectangle;
+    }
+
+    if (exp == end) {
+      return false;
+    }
   }
 
-  return (exp == end) ? false : true;
+  return true;
 
 error_ret:
 
