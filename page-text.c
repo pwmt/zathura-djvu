@@ -29,7 +29,7 @@ djvu_page_text_new(djvu_document_t* document, unsigned int page_number)
     goto error_ret;
   }
 
-  djvu_page_text_t* page_text = calloc(1, sizeof(page_text));
+  djvu_page_text_t* page_text = calloc(1, sizeof(djvu_page_text_t));
   if (page_text == NULL) {
     goto error_ret;
   }
