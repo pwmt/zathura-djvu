@@ -221,7 +221,7 @@ djvu_page_text_content_append(djvu_page_text_t* page_text, miniexp_t exp)
 static miniexp_t
 text_position_get_exp(djvu_page_text_t* page_text, unsigned int index)
 {
-  if (page_text == NULL || page_text->text_positions == NULL || index < 0) {
+  if (page_text == NULL || page_text->text_positions == NULL) {
     goto error_ret;
   }
 
