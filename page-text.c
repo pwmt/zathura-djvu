@@ -133,6 +133,16 @@ djvu_page_text_search(djvu_page_text_t* page_text, const char* text)
       continue;
     }
 
+    /* scale rectangle coordinates */
+    page_text->rectangle->x1 = ZATHURA_DJVU_SCALE * page_text->rectangle->x1;
+    page_text->rectangle->x2 = ZATHURA_DJVU_SCALE * page_text->rectangle->x2;
+    page_text->rectangle->y1 = ZATHURA_DJVU_SCALE * page_text->rectangle->y1;
+    page_text->rectangle->y2 = ZATHURA_DJVU_SCALE * page_text->rectangle->y2;
+
+    /* invert */
+    page_text->rectangle->y1 = page_text->page->height - page_text->rectangle->y1;
+    page_text->rectangle->y2 = page_text->page->height - page_text->rectangle->y2;
+
     /* add rectangle to result list */
     girara_list_append(results, page_text->rectangle);
     page_text->rectangle = NULL;

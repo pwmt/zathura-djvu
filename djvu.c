@@ -216,8 +216,8 @@ djvu_page_get(zathura_document_t* document, unsigned int page, zathura_plugin_er
     return NULL;
   }
 
-  document_page->width  = 0.2 * page_info.width;
-  document_page->height = 0.2 * page_info.height;
+  document_page->width  = ZATHURA_DJVU_SCALE * page_info.width;
+  document_page->height = ZATHURA_DJVU_SCALE * page_info.height;
 
   return document_page;
 }
