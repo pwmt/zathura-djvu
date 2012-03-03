@@ -73,6 +73,7 @@ djvu_page_text_free(djvu_page_text_t* page_text)
   if (page_text->text_information != miniexp_nil && page_text->document != NULL) {
     ddjvu_miniexp_release(page_text->document->document, page_text->text_information);
   }
+  free(page_text);
 }
 
 girara_list_t*
@@ -163,6 +164,10 @@ djvu_page_text_search(djvu_page_text_t* page_text, const char* text)
   return results;
 
 error_free:
+
+  if (results) {
+    girara_list_free(results);
+  }
 
   if (page_text->text_positions) {
     girara_list_free(page_text->text_positions);
