@@ -4,6 +4,7 @@
 #define DJVU_PAGE_H
 
 #include <girara/datastructures.h>
+#include <girara/macros.h>
 #include <zathura/document.h>
 
 #include "djvu.h"
@@ -31,14 +32,14 @@ typedef struct djvu_page_text_s {
  * @param page_number The number of the page
  * @return The page object or NULL if an error occured
  */
-djvu_page_text_t* djvu_page_text_new(djvu_document_t* document, zathura_page_t* page);
+GIRARA_HIDDEN djvu_page_text_t* djvu_page_text_new(djvu_document_t* document, zathura_page_t* page);
 
 /**
  * Frees a djvu page object
  *
  * @param page The page to be freed
  */
-void djvu_page_text_free(djvu_page_text_t* page_text);
+GIRARA_HIDDEN void djvu_page_text_free(djvu_page_text_t* page_text);
 
 /**
  * Searchs the page for a specific key word and returns a list of results
@@ -47,6 +48,6 @@ void djvu_page_text_free(djvu_page_text_t* page_text);
  * @param text The text to search
  * @return List of results or NULL if an error occured
  */
-girara_list_t* djvu_page_text_search(djvu_page_text_t* page_text, const char* text);
+GIRARA_HIDDEN girara_list_t* djvu_page_text_search(djvu_page_text_t* page_text, const char* text);
 
 #endif // DJVU_PAGE_H
