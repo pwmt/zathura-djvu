@@ -294,6 +294,12 @@ djvu_page_get_text(zathura_page_t* page, zathura_rectangle_t rectangle, zathura_
     goto error_ret;
   }
 
+  rectangle.x1 = (1 / ZATHURA_DJVU_SCALE) * rectangle.x1;
+  rectangle.x2 = (1 / ZATHURA_DJVU_SCALE) * rectangle.x2;
+  double tmp   = (1 / ZATHURA_DJVU_SCALE) * (page->height - rectangle.y1);
+  rectangle.y1 = (1 / ZATHURA_DJVU_SCALE) * (page->height - rectangle.y2);
+  rectangle.y2 = tmp;
+
   char* text = djvu_page_text_select(page_text, rectangle);
 
   djvu_page_text_free(page_text);
