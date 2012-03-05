@@ -50,4 +50,13 @@ GIRARA_HIDDEN void djvu_page_text_free(djvu_page_text_t* page_text);
  */
 GIRARA_HIDDEN girara_list_t* djvu_page_text_search(djvu_page_text_t* page_text, const char* text);
 
+/**
+ * Returns the text on the page under the given rectangle
+ *
+ * @param page_text The djvu page text object
+ * @param rectangle The area of where the text should be copied
+ * @return Copy of the text or NULL if an error occured or if the area is empty
+ */
+GIRARA_HIDDEN char* djvu_page_text_select(djvu_page_text_t* page_text, zathura_rectangle_t rectangle);
+
 #endif // DJVU_PAGE_H

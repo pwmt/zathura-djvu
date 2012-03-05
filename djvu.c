@@ -29,15 +29,16 @@ djvu_document_open(zathura_document_t* document)
     goto error_out;
   }
 
-  document->functions.document_free             = djvu_document_free;
-  document->functions.document_save_as          = djvu_document_save_as;
-  document->functions.page_get                  = djvu_page_get;
-  document->functions.page_search_text          = djvu_page_search_text;
-  document->functions.page_render               = djvu_page_render;
+  document->functions.document_free     = djvu_document_free;
+  document->functions.document_save_as  = djvu_document_save_as;
+  document->functions.page_get          = djvu_page_get;
+  document->functions.page_search_text  = djvu_page_search_text;
+  document->functions.page_get_text     = djvu_page_get_text;
+  document->functions.page_render       = djvu_page_render;
 #ifdef HAVE_CAIRO
-  document->functions.page_render_cairo         = djvu_page_render_cairo;
+  document->functions.page_render_cairo = djvu_page_render_cairo;
 #endif
-  document->functions.page_free                 = djvu_page_free;
+  document->functions.page_free         = djvu_page_free;
 
   document->data = malloc(sizeof(djvu_document_t));
   if (document->data == NULL) {
@@ -266,6 +267,38 @@ error_free:
   if (page_text != NULL) {
     djvu_page_text_free(page_text);
   }
+
+error_ret:
+
+  if (error != NULL && *error == ZATHURA_PLUGIN_ERROR_OK) {
+    *error = ZATHURA_PLUGIN_ERROR_UNKNOWN;
+  }
+
+  return NULL;
+}
+
+char*
+djvu_page_get_text(zathura_page_t* page, zathura_rectangle_t rectangle, zathura_plugin_error_t* error)
+{
+  if (page == NULL) {
+    if (error != NULL) {
+      *error = ZATHURA_PLUGIN_ERROR_INVALID_ARGUMENTS;
+    }
+    goto error_ret;
+  }
+
+  djvu_document_t* djvu_document = (djvu_document_t*) page->document->data;
+
+  djvu_page_text_t* page_text = djvu_page_text_new(djvu_document, page);
+  if (page_text == NULL) {
+    goto error_ret;
+  }
+
+  char* text = djvu_page_text_select(page_text, rectangle);
+
+  djvu_page_text_free(page_text);
+
+  return text;
 
 error_ret:
 

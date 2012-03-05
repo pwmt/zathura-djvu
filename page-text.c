@@ -21,6 +21,12 @@ static bool djvu_page_text_build_rectangle(djvu_page_text_t* page_text,
     miniexp_t exp, miniexp_t start, miniexp_t end);
 static bool djvu_page_text_build_rectangle_process(djvu_page_text_t* page_text,
     miniexp_t exp, miniexp_t start, miniexp_t end);
+static void djvu_page_text_limit(djvu_page_text_t* page_text, miniexp_t exp,
+    zathura_rectangle_t* rectangle);
+static void djvu_page_text_limit_process(djvu_page_text_t* page_text,
+    miniexp_t exp, zathura_rectangle_t* rectangle);
+static bool djvu_page_text_select_content(djvu_page_text_t* page_text,
+    miniexp_t exp, int delimiter);
 
 djvu_page_text_t*
 djvu_page_text_new(djvu_document_t* document, zathura_page_t* page)
@@ -366,4 +372,116 @@ djvu_page_text_build_rectangle(djvu_page_text_t* page_text, miniexp_t exp,
 error_ret:
 
   return false;
+}
+
+char*
+djvu_page_text_select(djvu_page_text_t* page_text, zathura_rectangle_t rectangle)
+{
+  if (page_text == NULL) {
+    return NULL;
+  }
+
+  djvu_page_text_limit(page_text, page_text->text_information, &rectangle);
+  djvu_page_text_select_content(page_text, page_text->text_information, 0);
+
+  return (page_text->content != NULL) ? g_strdup(page_text->content) : NULL;
+}
+
+static void
+djvu_page_text_limit_process(djvu_page_text_t* page_text, miniexp_t exp,
+    zathura_rectangle_t* rectangle)
+{
+  zathura_rectangle_t current_rectangle;
+  current_rectangle.x1 = miniexp_to_int(miniexp_nth(1, exp));
+  current_rectangle.y1 = miniexp_to_int(miniexp_nth(2, exp));
+  current_rectangle.x2 = miniexp_to_int(miniexp_nth(3, exp));
+  current_rectangle.y2 = miniexp_to_int(miniexp_nth(4, exp));
+
+  if (current_rectangle.x2 >= rectangle->x1 && current_rectangle.y1 <= rectangle->y2
+      && current_rectangle.x1 <= rectangle->x2 && current_rectangle.y2 >= rectangle->y1) {
+    if (page_text->begin == miniexp_nil) {
+      page_text->begin = exp;
+    }
+
+    page_text->end = exp;
+  }
+}
+
+static void
+djvu_page_text_limit(djvu_page_text_t* page_text, miniexp_t exp, zathura_rectangle_t* rectangle)
+{
+  if (page_text == NULL || rectangle == NULL) {
+    return;
+  }
+
+  if (miniexp_consp(exp) == 0 || miniexp_symbolp(miniexp_car(exp)) == 0) {
+    return;
+  }
+
+  miniexp_t inner = miniexp_cddr(miniexp_cdddr(exp));
+  while (inner != miniexp_nil) {
+    miniexp_t data = miniexp_car(inner);
+
+    if (miniexp_stringp(data) != 0) {
+      djvu_page_text_limit_process(page_text, exp, rectangle);
+    } else {
+      djvu_page_text_limit(page_text, data, rectangle);
+    }
+
+    inner = miniexp_cdr(inner);
+  }
+
+}
+
+static bool
+djvu_page_text_select_content(djvu_page_text_t* page_text, miniexp_t exp, int delimiter)
+{
+  if (page_text == NULL) {
+    return false;
+  }
+
+  if (miniexp_consp(exp) == 0 || miniexp_symbolp(miniexp_car(exp)) == 0) {
+    return false;
+  }
+
+  if (miniexp_car(exp) != miniexp_symbol("char")) {
+    delimiter |= (miniexp_car(exp) == miniexp_symbol("word")) ? 1 : 2;
+  }
+
+  miniexp_t inner = miniexp_cddr(miniexp_cdddr(exp));
+  while (inner != miniexp_nil) {
+    miniexp_t data = miniexp_car(inner);
+
+    if (miniexp_stringp(data) != 0) {
+      if (page_text->content != NULL || exp == page_text->begin) {
+        char* token_content = (char*) miniexp_to_str(miniexp_nth(5, exp));
+
+        if (page_text->content != NULL) {
+          char* content = g_strjoin(
+              (delimiter & 2) ? "\n" : (delimiter & 1) ? " " : NULL,
+              page_text->content,
+              token_content,
+              NULL
+              );
+          g_free(page_text->content);
+          page_text->content = content;
+        } else {
+          page_text->content = g_strdup(token_content);
+        }
+
+        if (exp == page_text->end) {
+          return false;
+        }
+      }
+    } else {
+      if (djvu_page_text_select_content(page_text, data, delimiter) == false) {
+        return false;
+      }
+    }
+
+    delimiter = 0;
+    inner     = miniexp_cdr(inner);
+  }
+
+  return true;
 }
