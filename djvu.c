@@ -294,7 +294,7 @@ djvu_page_get_text(zathura_page_t* page, zathura_rectangle_t rectangle, zathura_
     goto error_ret;
   }
 
-  double tmp  = 0;
+  double tmp = 0;
 
   switch (page->document->rotate) {
     case 90:

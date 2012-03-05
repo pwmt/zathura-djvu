@@ -15,8 +15,10 @@ typedef struct text_position_s {
 } text_position_t;
 
 /* forward declaration */
-static void djvu_page_text_content_append(djvu_page_text_t* page_text, miniexp_t exp);
-static miniexp_t text_position_get_exp(djvu_page_text_t* page_text, unsigned int index);
+static void djvu_page_text_content_append(djvu_page_text_t* page_text,
+    miniexp_t exp);
+static miniexp_t text_position_get_exp(djvu_page_text_t* page_text,
+    unsigned int index);
 static bool djvu_page_text_build_rectangle(djvu_page_text_t* page_text,
     miniexp_t exp, miniexp_t start, miniexp_t end);
 static bool djvu_page_text_build_rectangle_process(djvu_page_text_t* page_text,
@@ -47,8 +49,9 @@ djvu_page_text_new(djvu_document_t* document, zathura_page_t* page)
   page_text->page             = page;
 
   /* read page text */
-  while ((page_text->text_information = ddjvu_document_get_pagetext(document->document, page->number,
-          "char")) == miniexp_dummy) {
+  while ((page_text->text_information =
+        ddjvu_document_get_pagetext(document->document, page->number, "char"))
+      == miniexp_dummy) {
     handle_messages(document, true);
   }
 
@@ -77,7 +80,8 @@ djvu_page_text_free(djvu_page_text_t* page_text)
   }
 
   if (page_text->text_information != miniexp_nil && page_text->document != NULL) {
-    ddjvu_miniexp_release(page_text->document->document, page_text->text_information);
+    ddjvu_miniexp_release(page_text->document->document,
+        page_text->text_information);
   }
   free(page_text);
 }
@@ -133,7 +137,8 @@ djvu_page_text_search(djvu_page_text_t* page_text, const char* text)
       page_text->rectangle = NULL;
     }
 
-    djvu_page_text_build_rectangle(page_text, page_text->text_information, start, end);
+    djvu_page_text_build_rectangle(page_text, page_text->text_information,
+        start, end);
 
     if (page_text->rectangle == NULL) {
       tmp += search_length;
@@ -408,7 +413,8 @@ djvu_page_text_limit_process(djvu_page_text_t* page_text, miniexp_t exp,
 }
 
 static void
-djvu_page_text_limit(djvu_page_text_t* page_text, miniexp_t exp, zathura_rectangle_t* rectangle)
+djvu_page_text_limit(djvu_page_text_t* page_text, miniexp_t exp,
+    zathura_rectangle_t* rectangle)
 {
   if (page_text == NULL || rectangle == NULL) {
     return;
