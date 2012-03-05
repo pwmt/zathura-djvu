@@ -280,7 +280,7 @@ error_ret:
 char*
 djvu_page_get_text(zathura_page_t* page, zathura_rectangle_t rectangle, zathura_plugin_error_t* error)
 {
-  if (page == NULL) {
+  if (page == NULL || page->document == NULL) {
     if (error != NULL) {
       *error = ZATHURA_PLUGIN_ERROR_INVALID_ARGUMENTS;
     }
@@ -294,11 +294,42 @@ djvu_page_get_text(zathura_page_t* page, zathura_rectangle_t rectangle, zathura_
     goto error_ret;
   }
 
-  rectangle.x1 = (1 / ZATHURA_DJVU_SCALE) * rectangle.x1;
-  rectangle.x2 = (1 / ZATHURA_DJVU_SCALE) * rectangle.x2;
-  double tmp   = (1 / ZATHURA_DJVU_SCALE) * (page->height - rectangle.y1);
-  rectangle.y1 = (1 / ZATHURA_DJVU_SCALE) * (page->height - rectangle.y2);
-  rectangle.y2 = tmp;
+  double tmp  = 0;
+
+  switch (page->document->rotate) {
+    case 90:
+      tmp = rectangle.x1;
+      rectangle.x1 = rectangle.y1;
+      rectangle.y1 = tmp;
+      tmp = rectangle.x2;
+      rectangle.x2 = rectangle.y2;
+      rectangle.y2 = tmp;
+      break;
+    case 180:
+      tmp = rectangle.x1;
+      rectangle.x1 = (page->width  - rectangle.x2);
+      rectangle.x2 = (page->width  - tmp);
+      break;
+    case 270:
+      tmp = rectangle.y2;
+      rectangle.y2 = (page->height - rectangle.x1);
+      rectangle.x1 = (page->width  - tmp);
+      tmp = rectangle.y1;
+      rectangle.y1 = (page->height - rectangle.x2);
+      rectangle.x2 = (page->width  - tmp);
+      break;
+    default:
+      tmp = rectangle.y1;
+      rectangle.y1 = (page->height - rectangle.y2);
+      rectangle.y2 = (page->height - tmp);
+      break;
+  }
+
+  /* adjust to scale */
+  rectangle.x1 /= ZATHURA_DJVU_SCALE;
+  rectangle.x2 /= ZATHURA_DJVU_SCALE;
+  rectangle.y1 /= ZATHURA_DJVU_SCALE;
+  rectangle.y2 /= ZATHURA_DJVU_SCALE;
 
   char* text = djvu_page_text_select(page_text, rectangle);
 
