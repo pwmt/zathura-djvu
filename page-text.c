@@ -83,6 +83,19 @@ djvu_page_text_free(djvu_page_text_t* page_text)
     ddjvu_miniexp_release(page_text->document->document,
         page_text->text_information);
   }
+
+  if (page_text->content != NULL) {
+    g_free(page_text->content);
+  }
+
+  if (page_text->text_positions != NULL) {
+    girara_list_free(page_text->text_positions);
+  }
+
+  if (page_text->rectangle != NULL) {
+    free(page_text->rectangle);
+  }
+
   free(page_text);
 }
 
@@ -93,14 +106,21 @@ djvu_page_text_search(djvu_page_text_t* page_text, const char* text)
     goto error_ret;
   }
 
+  /* clean and reset */
   if (page_text->content != NULL) {
     g_free(page_text->content);
     page_text->content = NULL;
   }
 
+  if (page_text->text_positions != NULL) {
+    girara_list_free(page_text->text_positions);
+    page_text->text_positions = NULL;
+  }
+
   /* create result list */
   girara_list_t* results = girara_list_new2(
       (girara_free_function_t) free);
+
   if (results == NULL) {
     goto error_ret;
   }
@@ -176,11 +196,11 @@ djvu_page_text_search(djvu_page_text_t* page_text, const char* text)
 
 error_free:
 
-  if (results) {
+  if (results != NULL) {
     girara_list_free(results);
   }
 
-  if (page_text->text_positions) {
+  if (page_text->text_positions != NULL) {
     girara_list_free(page_text->text_positions);
   }
 
