@@ -12,7 +12,14 @@
 /* forward declarations */
 static const char* get_extension(const char* path);
 
-PLUGIN_REGISTER("djvu", 0, 1, 0, djvu_document_open, { "image/vnd.djvu" })
+PLUGIN_REGISTER(
+    "djvu",
+    0, 1, 0,
+    djvu_document_open,
+    PLUGIN_MIMETYPES({
+      "image/vnd.djvu"
+    })
+  )
 
 zathura_plugin_error_t
 djvu_document_open(zathura_document_t* document)
