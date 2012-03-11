@@ -22,7 +22,7 @@ zathura-version-check:
 ifneq ($(ZATHURA_VERSION_CHECK), 0)
 	$(error "The minimum required version of zathura is ${ZATHURA_MIN_VERSION}")
 endif
-	touch zathura-version-check
+	$(QUIET)touch zathura-version-check
 
 options:
 	$(ECHO) ${PLUGIN} build options:
