@@ -8,6 +8,7 @@ ZATHURA_VERSION_CHECK ?= $(shell pkg-config --atleast-version=$(ZATHURA_MIN_VERS
 
 # paths
 PREFIX ?= /usr
+LIBDIR ?= ${PREFIX}/lib
 
 # libs
 CAIRO_INC ?= $(shell pkg-config --cflags cairo)
@@ -24,7 +25,9 @@ GIRARA_LIB ?= $(shell pkg-config --libs girara-gtk2)
 
 ZATHURA_INC ?= $(shell pkg-config --cflags zathura)
 PLUGINDIR ?= $(shell pkg-config --variable=plugindir zathura)
-PLUGINDIR ?= ${PREFIX}/lib/zathura
+ifeq (,${PLUGINDIR})
+PLUGINDIR = ${LIBDIR}/zathura
+endif
 
 INCS = ${GIRARA_INC} ${GLIB_INC} ${DJVU_INC} ${ZATHURA_INC}
 LIBS = ${GIRARA_LIB} ${GLIB_LIB} ${DJVU_LIB}
