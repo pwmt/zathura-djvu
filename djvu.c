@@ -163,13 +163,14 @@ djvu_document_save_as(zathura_document_t* document, const char* path)
 
   const char* extension = get_extension(path);
 
+  ddjvu_job_t* job = NULL;
   if (extension != NULL && g_strcmp0(extension, "ps") == 0) {
-    ddjvu_job_t* job = ddjvu_document_print(djvu_document->document, fp, 0, NULL);
-    while (ddjvu_job_done(job) != true) {
-      handle_messages(djvu_document, true);
-    }
+    job = ddjvu_document_print(djvu_document->document, fp, 0, NULL);
   } else {
-    ddjvu_document_save(djvu_document->document, fp, 0, NULL);
+    job = ddjvu_document_save(djvu_document->document, fp, 0, NULL);
+  }
+  while (ddjvu_job_done(job) != true) {
+      handle_messages(djvu_document, true);
   }
 
   fclose(fp);
