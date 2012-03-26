@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <zathura/document.h>
+#include <zathura/page.h>
 #include <libdjvu/ddjvuapi.h>
 #ifdef HAVE_CAIRO
 #include <cairo.h>
@@ -49,15 +50,13 @@ zathura_plugin_error_t djvu_document_free(zathura_document_t* document);
 zathura_plugin_error_t djvu_document_save_as(zathura_document_t* document, const char* path);
 
 /**
- * Returns a reference to a page
+ * Initializes the page
  *
- * @param document Zathura document
- * @param page Page number
- * @param error Set to an error value (see zathura_plugin_error_t) if an
- *   error occured
- * @return A page object or NULL if an error occurred
+ * @param page The page object
+ * @return ZATHURA_PLUGIN_ERROR_OK when no error occured, otherwise see
+ *    zathura_plugin_error_t
  */
-zathura_page_t* djvu_page_get(zathura_document_t* document, unsigned int page, zathura_plugin_error_t* error);
+zathura_plugin_error_t djvu_page_init(zathura_page_t* page);
 
 /**
  * Frees a DjVu page
@@ -66,7 +65,7 @@ zathura_page_t* djvu_page_get(zathura_document_t* document, unsigned int page, z
  * @return ZATHURA_PLUGIN_ERROR_OK when no error occured, otherwise see
  *    zathura_plugin_error_t
  */
-zathura_plugin_error_t djvu_page_free(zathura_page_t* page);
+zathura_plugin_error_t djvu_page_clear(zathura_page_t* page);
 
 /**
  * Searches for a specific text on a page and returns a list of results
