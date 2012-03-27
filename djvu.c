@@ -12,53 +12,53 @@
 /* forward declarations */
 static const char* get_extension(const char* path);
 
-PLUGIN_REGISTER(
-    "djvu",
-    0, 1, 0,
-    djvu_document_open,
-    PLUGIN_MIMETYPES({
-      "image/vnd.djvu"
-    })
-  )
+void
+register_functions(zathura_plugin_functions_t* functions)
+{
+  functions->document_open     = djvu_document_open;
+  functions->document_free     = djvu_document_free;
+  functions->document_save_as  = djvu_document_save_as;
+  functions->page_init         = djvu_page_init;
+  functions->page_clear        = djvu_page_clear;
+  functions->page_search_text  = djvu_page_search_text;
+  functions->page_get_text     = djvu_page_get_text;
+  functions->page_render       = djvu_page_render;
+#ifdef HAVE_CAIRO
+  functions->page_render_cairo = djvu_page_render_cairo;
+#endif
+}
 
-zathura_plugin_error_t
+ZATHURA_PLUGIN_REGISTER(
+  "djvu",
+  0, 1, 0,
+  register_functions,
+  ZATHURA_PLUGIN_MIMETYPES({
+    "image/vnd.djvu"
+  })
+)
+
+zathura_error_t
 djvu_document_open(zathura_document_t* document)
 {
-  zathura_plugin_error_t error = ZATHURA_PLUGIN_ERROR_OK;
+  zathura_error_t error = ZATHURA_ERROR_OK;
 
   if (document == NULL) {
-    error = ZATHURA_PLUGIN_ERROR_INVALID_ARGUMENTS;
+    error = ZATHURA_ERROR_INVALID_ARGUMENTS;
     goto error_out;
   }
 
-  document->functions.document_free     = djvu_document_free;
-  document->functions.document_save_as  = djvu_document_save_as;
-  document->functions.page_init         = djvu_page_init;
-  document->functions.page_clear        = djvu_page_clear;
-  document->functions.page_search_text  = djvu_page_search_text;
-  document->functions.page_get_text     = djvu_page_get_text;
-  document->functions.page_render       = djvu_page_render;
-#ifdef HAVE_CAIRO
-  document->functions.page_render_cairo = djvu_page_render_cairo;
-#endif
-
-  document->data = malloc(sizeof(djvu_document_t));
-  if (document->data == NULL) {
-    error = ZATHURA_PLUGIN_ERROR_OUT_OF_MEMORY;
+  djvu_document_t* djvu_document = calloc(1, sizeof(djvu_document_t));
+  if (djvu_document == NULL) {
+    error = ZATHURA_ERROR_OUT_OF_MEMORY;
     goto error_out;
   }
-
-  djvu_document_t* djvu_document = (djvu_document_t*) document->data;
-  djvu_document->context  = NULL;
-  djvu_document->document = NULL;
-  djvu_document->format   = NULL;
 
   /* setup format */
   static unsigned int masks[4] = {0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000};
   djvu_document->format = ddjvu_format_create(DDJVU_FORMAT_RGBMASK32, 4, masks);
 
   if (djvu_document->format == NULL) {
-    error = ZATHURA_PLUGIN_ERROR_UNKNOWN;
+    error = ZATHURA_ERROR_UNKNOWN;
     goto error_free;
   }
 
@@ -68,7 +68,7 @@ djvu_document_open(zathura_document_t* document)
   djvu_document->context = ddjvu_context_create("zathura");
 
   if (djvu_document->context == NULL) {
-    error = ZATHURA_PLUGIN_ERROR_UNKNOWN;
+    error = ZATHURA_ERROR_UNKNOWN;
     goto error_free;
   }
 
@@ -76,12 +76,12 @@ djvu_document_open(zathura_document_t* document)
   djvu_document->document =
     ddjvu_document_create_by_filename(
         djvu_document->context,
-        document->file_path,
+        zathura_document_get_path(document),
         FALSE
     );
 
   if (djvu_document->document == NULL) {
-    error = ZATHURA_PLUGIN_ERROR_UNKNOWN;
+    error = ZATHURA_ERROR_UNKNOWN;
     goto error_free;
   }
 
@@ -92,7 +92,7 @@ djvu_document_open(zathura_document_t* document)
   while ((msg = ddjvu_message_peek(djvu_document->context)) &&
          (msg->m_any.tag != DDJVU_DOCINFO)) {
     if (msg->m_any.tag == DDJVU_ERROR) {
-      error = ZATHURA_PLUGIN_ERROR_UNKNOWN;
+      error = ZATHURA_ERROR_UNKNOWN;
       goto error_free;
     }
 
@@ -102,12 +102,13 @@ djvu_document_open(zathura_document_t* document)
   /* decoding error */
   if (ddjvu_document_decoding_error(djvu_document->document)) {
     handle_messages(djvu_document, true);
-    error = ZATHURA_PLUGIN_ERROR_UNKNOWN;
+    error = ZATHURA_ERROR_UNKNOWN;
     goto error_free;
   }
 
-  document->number_of_pages =
-    ddjvu_document_get_pagenum(djvu_document->document);
+  zathura_document_set_data(document, djvu_document);
+  zathura_document_set_number_of_pages(document,
+      ddjvu_document_get_pagenum(djvu_document->document));
 
   return error;
 
@@ -121,44 +122,40 @@ error_free:
     ddjvu_context_release(djvu_document->context);
   }
 
-  free(document->data);
-  document->data = NULL;
+  free(djvu_document);
 
 error_out:
 
   return error;
 }
 
-zathura_plugin_error_t
-djvu_document_free(zathura_document_t* document)
+zathura_error_t
+djvu_document_free(zathura_document_t* document, djvu_document_t* djvu_document)
 {
   if (document == NULL) {
-    return ZATHURA_PLUGIN_ERROR_INVALID_ARGUMENTS;
+    return ZATHURA_ERROR_INVALID_ARGUMENTS;
   }
 
-  if (document->data != NULL) {
-    djvu_document_t* djvu_document = (djvu_document_t*) document->data;
+  if (djvu_document != NULL) {
     ddjvu_context_release(djvu_document->context);
     ddjvu_document_release(djvu_document->document);
     ddjvu_format_release(djvu_document->format);
-    free(document->data);
+    free(djvu_document);
   }
 
-  return ZATHURA_PLUGIN_ERROR_OK;
+  return ZATHURA_ERROR_OK;
 }
 
-zathura_plugin_error_t
-djvu_document_save_as(zathura_document_t* document, const char* path)
+zathura_error_t
+djvu_document_save_as(zathura_document_t* document, djvu_document_t* djvu_document, const char* path)
 {
-  if (document == NULL || document->data == NULL || path == NULL) {
-    return ZATHURA_PLUGIN_ERROR_INVALID_ARGUMENTS;
+  if (document == NULL || djvu_document == NULL || path == NULL) {
+    return ZATHURA_ERROR_INVALID_ARGUMENTS;
   }
-
-  djvu_document_t* djvu_document = (djvu_document_t*) document->data;
 
   FILE* fp = fopen(path, "w");
   if (fp == NULL) {
-    return ZATHURA_PLUGIN_ERROR_UNKNOWN;
+    return ZATHURA_ERROR_UNKNOWN;
   }
 
   const char* extension = get_extension(path);
@@ -175,18 +172,18 @@ djvu_document_save_as(zathura_document_t* document, const char* path)
 
   fclose(fp);
 
-  return ZATHURA_PLUGIN_ERROR_OK;
+  return ZATHURA_ERROR_OK;
 }
 
-zathura_plugin_error_t
-djvu_page_init(zathura_page_t* page)
+zathura_error_t
+djvu_page_init(zathura_page_t* page, void* data)
 {
   if (page == NULL) {
-    return ZATHURA_PLUGIN_ERROR_INVALID_ARGUMENTS;
+    return ZATHURA_ERROR_INVALID_ARGUMENTS;
   }
 
   zathura_document_t* document   = zathura_page_get_document(page);
-  djvu_document_t* djvu_document = (djvu_document_t*) document->data;
+  djvu_document_t* djvu_document = zathura_document_get_data(document);
 
   ddjvu_status_t status;
   ddjvu_pageinfo_t page_info;
@@ -199,41 +196,41 @@ djvu_page_init(zathura_page_t* page)
 
   if (status >= DDJVU_JOB_FAILED) {
     handle_messages(djvu_document, true);
-    return ZATHURA_PLUGIN_ERROR_UNKNOWN;
+    return ZATHURA_ERROR_UNKNOWN;
   }
 
-  zathura_page_set_width(page, ZATHURA_DJVU_SCALE * page_info.width);
+  zathura_page_set_width(page,  ZATHURA_DJVU_SCALE * page_info.width);
   zathura_page_set_height(page, ZATHURA_DJVU_SCALE * page_info.height);
 
-  return ZATHURA_PLUGIN_ERROR_OK;
+  return ZATHURA_ERROR_OK;
 }
 
-zathura_plugin_error_t
-djvu_page_clear(zathura_page_t* page)
+zathura_error_t
+djvu_page_clear(zathura_page_t* page, void* data)
 {
   if (page == NULL) {
-    return ZATHURA_PLUGIN_ERROR_INVALID_ARGUMENTS;
+    return ZATHURA_ERROR_INVALID_ARGUMENTS;
   }
 
-  return ZATHURA_PLUGIN_ERROR_OK;
+  return ZATHURA_ERROR_OK;
 }
 
 girara_list_t*
-djvu_page_search_text(zathura_page_t* page, const char* text, zathura_plugin_error_t* error)
+djvu_page_search_text(zathura_page_t* page, void* data, const char* text, zathura_error_t* error)
 {
   if (page == NULL || text == NULL || strlen(text) == 0) {
     if (error != NULL) {
-      *error = ZATHURA_PLUGIN_ERROR_INVALID_ARGUMENTS;
+      *error = ZATHURA_ERROR_INVALID_ARGUMENTS;
     }
     goto error_ret;
   }
 
-  zathura_document_t* document   = zathura_page_get_document(page);
+  zathura_document_t* document = zathura_page_get_document(page);
   if (document == NULL) {
     goto error_ret;
   }
 
-  djvu_document_t* djvu_document = (djvu_document_t*) document->data;
+  djvu_document_t* djvu_document = zathura_document_get_data(document);
 
   djvu_page_text_t* page_text = djvu_page_text_new(djvu_document, page);
   if (page_text == NULL) {
@@ -257,19 +254,19 @@ error_free:
 
 error_ret:
 
-  if (error != NULL && *error == ZATHURA_PLUGIN_ERROR_OK) {
-    *error = ZATHURA_PLUGIN_ERROR_UNKNOWN;
+  if (error != NULL && *error == ZATHURA_ERROR_OK) {
+    *error = ZATHURA_ERROR_UNKNOWN;
   }
 
   return NULL;
 }
 
 char*
-djvu_page_get_text(zathura_page_t* page, zathura_rectangle_t rectangle, zathura_plugin_error_t* error)
+djvu_page_get_text(zathura_page_t* page, void* data, zathura_rectangle_t rectangle, zathura_error_t* error)
 {
   if (page == NULL) {
     if (error != NULL) {
-      *error = ZATHURA_PLUGIN_ERROR_INVALID_ARGUMENTS;
+      *error = ZATHURA_ERROR_INVALID_ARGUMENTS;
     }
     goto error_ret;
   }
@@ -279,7 +276,7 @@ djvu_page_get_text(zathura_page_t* page, zathura_rectangle_t rectangle, zathura_
     goto error_ret;
   }
 
-  djvu_document_t* djvu_document = (djvu_document_t*) document->data;
+  djvu_document_t* djvu_document = zathura_document_get_data(document);
 
   djvu_page_text_t* page_text = djvu_page_text_new(djvu_document, page);
   if (page_text == NULL) {
@@ -290,7 +287,7 @@ djvu_page_get_text(zathura_page_t* page, zathura_rectangle_t rectangle, zathura_
   double page_height = zathura_page_get_height(page);
   double page_width  = zathura_page_get_width(page);
 
-  switch (document->rotate) {
+  switch (zathura_document_get_rotation(document)) {
     case 90:
       tmp = rectangle.x1;
       rectangle.x1 = rectangle.y1;
@@ -333,32 +330,32 @@ djvu_page_get_text(zathura_page_t* page, zathura_rectangle_t rectangle, zathura_
 
 error_ret:
 
-  if (error != NULL && *error == ZATHURA_PLUGIN_ERROR_OK) {
-    *error = ZATHURA_PLUGIN_ERROR_UNKNOWN;
+  if (error != NULL && *error == ZATHURA_ERROR_OK) {
+    *error = ZATHURA_ERROR_UNKNOWN;
   }
 
   return NULL;
 }
 
 #ifdef HAVE_CAIRO
-zathura_plugin_error_t
-djvu_page_render_cairo(zathura_page_t* page, cairo_t* cairo, bool GIRARA_UNUSED(printing))
+zathura_error_t
+djvu_page_render_cairo(zathura_page_t* page, void* data, cairo_t* cairo, bool GIRARA_UNUSED(printing))
 {
   if (page == NULL || cairo == NULL) {
-    return ZATHURA_PLUGIN_ERROR_INVALID_ARGUMENTS;
+    return ZATHURA_ERROR_INVALID_ARGUMENTS;
   }
 
   zathura_document_t* document = zathura_page_get_document(page);
   if (document == NULL) {
-    return ZATHURA_PLUGIN_ERROR_UNKNOWN;
+    return ZATHURA_ERROR_UNKNOWN;
   }
 
   /* init ddjvu render data */
-  djvu_document_t* djvu_document = (djvu_document_t*) document->data;
+  djvu_document_t* djvu_document = zathura_document_get_data(document);
   ddjvu_page_t* djvu_page        = ddjvu_page_create_by_pageno(djvu_document->document, zathura_page_get_index(page));
 
   if (djvu_page == NULL) {
-    return ZATHURA_PLUGIN_ERROR_UNKNOWN;
+    return ZATHURA_ERROR_UNKNOWN;
   }
 
   while (!ddjvu_page_decoding_done(djvu_page)) {
@@ -369,7 +366,7 @@ djvu_page_render_cairo(zathura_page_t* page, cairo_t* cairo, bool GIRARA_UNUSED(
 
   if (surface == NULL) {
     ddjvu_page_release(djvu_page);
-    return ZATHURA_PLUGIN_ERROR_UNKNOWN;
+    return ZATHURA_ERROR_UNKNOWN;
   }
 
   unsigned int page_width  = cairo_image_surface_get_width(surface);
@@ -378,29 +375,29 @@ djvu_page_render_cairo(zathura_page_t* page, cairo_t* cairo, bool GIRARA_UNUSED(
   ddjvu_rect_t rrect = { 0, 0, page_width, page_height };
   ddjvu_rect_t prect = { 0, 0, page_width, page_height };
 
-  char* data = (char*) cairo_image_surface_get_data(surface);
+  char* surface_data = (char*) cairo_image_surface_get_data(surface);
 
-  if (data == NULL) {
+  if (surface_data == NULL) {
     ddjvu_page_release(djvu_page);
-    return ZATHURA_PLUGIN_ERROR_UNKNOWN;
+    return ZATHURA_ERROR_UNKNOWN;
   }
 
   /* render page */
   ddjvu_page_render(djvu_page, DDJVU_RENDER_COLOR, &prect, &rrect,
-      djvu_document->format, cairo_image_surface_get_stride(surface), data);
+      djvu_document->format, cairo_image_surface_get_stride(surface), surface_data);
 
   ddjvu_page_release(djvu_page);
 
-  return ZATHURA_PLUGIN_ERROR_OK;
+  return ZATHURA_ERROR_OK;
 }
 #endif
 
 zathura_image_buffer_t*
-djvu_page_render(zathura_page_t* page, zathura_plugin_error_t* error)
+djvu_page_render(zathura_page_t* page, void* data, zathura_error_t* error)
 {
   if (page == NULL) {
     if (error != NULL) {
-      *error = ZATHURA_PLUGIN_ERROR_INVALID_ARGUMENTS;
+      *error = ZATHURA_ERROR_INVALID_ARGUMENTS;
     }
     return NULL;
   }
@@ -411,24 +408,24 @@ djvu_page_render(zathura_page_t* page, zathura_plugin_error_t* error)
   }
 
   /* calculate sizes */
-  unsigned int page_width  = document->scale * zathura_page_get_width(page);
-  unsigned int page_height = document->scale * zathura_page_get_height(page);
+  unsigned int page_width  = zathura_document_get_scale(document) * zathura_page_get_width(page);
+  unsigned int page_height = zathura_document_get_scale(document) * zathura_page_get_height(page);
 
   if (page_width == 0 || page_height == 0) {
     if (error != NULL) {
-      *error = ZATHURA_PLUGIN_ERROR_UNKNOWN;
+      *error = ZATHURA_ERROR_UNKNOWN;
     }
     goto error_out;
   }
 
   /* init ddjvu render data */
-  djvu_document_t* djvu_document = (djvu_document_t*) document->data;
+  djvu_document_t* djvu_document = zathura_document_get_data(document);
   ddjvu_page_t* djvu_page        = ddjvu_page_create_by_pageno(
       djvu_document->document, zathura_page_get_index(page));
 
   if (djvu_page == NULL) {
     if (error != NULL) {
-      *error = ZATHURA_PLUGIN_ERROR_UNKNOWN;
+      *error = ZATHURA_ERROR_UNKNOWN;
     }
     goto error_out;
   }
@@ -445,7 +442,7 @@ djvu_page_render(zathura_page_t* page, zathura_plugin_error_t* error)
 
   if (image_buffer == NULL) {
     if (error != NULL) {
-      *error = ZATHURA_PLUGIN_ERROR_OUT_OF_MEMORY;
+      *error = ZATHURA_ERROR_OUT_OF_MEMORY;
     }
     goto error_free;
   }
