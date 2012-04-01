@@ -2,6 +2,7 @@
 
 #include <libdjvu/miniexp.h>
 #include <string.h>
+#include <sys/types.h>
 
 #include "page-text.h"
 #include "internal.h"
