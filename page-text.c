@@ -3,6 +3,7 @@
 #include <libdjvu/miniexp.h>
 #include <string.h>
 #include <sys/types.h>
+#include <glib.h>
 
 #include "page-text.h"
 #include "internal.h"

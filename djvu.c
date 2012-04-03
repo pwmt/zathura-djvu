@@ -4,6 +4,7 @@
 #include <girara/datastructures.h>
 #include <string.h>
 #include <libdjvu/miniexp.h>
+#include <glib.h>
 
 #include "djvu.h"
 #include "page-text.h"
