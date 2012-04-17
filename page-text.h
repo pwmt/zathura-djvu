@@ -6,6 +6,7 @@
 #include <girara/datastructures.h>
 #include <girara/macros.h>
 #include <zathura/document.h>
+#include <libdjvu/miniexp.h>
 
 #include "djvu.h"
 
