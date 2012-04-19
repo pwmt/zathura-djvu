@@ -160,8 +160,13 @@ djvu_document_index_generate(zathura_document_t* document, djvu_document_t*
     return NULL;
   }
 
-  miniexp_t outline = ddjvu_document_get_outline(djvu_document->document);
-  if (outline == miniexp_dummy || outline == miniexp_nil) {
+  miniexp_t outline = miniexp_dummy;
+  while ((outline = ddjvu_document_get_outline(djvu_document->document)) ==
+      miniexp_dummy) {
+    handle_messages(djvu_document, true);
+  }
+
+  if (outline == miniexp_dummy) {
     return NULL;
   }
 
