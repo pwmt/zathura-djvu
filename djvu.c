@@ -4,6 +4,7 @@
 #include <girara/datastructures.h>
 #include <string.h>
 #include <libdjvu/miniexp.h>
+#include <glib.h>
 
 #include "djvu.h"
 #include "page-text.h"
@@ -11,20 +12,22 @@
 
 /* forward declarations */
 static const char* get_extension(const char* path);
+static void build_index(miniexp_t expression, girara_tree_node_t* root);
 
 void
 register_functions(zathura_plugin_functions_t* functions)
 {
-  functions->document_open     = djvu_document_open;
-  functions->document_free     = djvu_document_free;
-  functions->document_save_as  = djvu_document_save_as;
-  functions->page_init         = djvu_page_init;
-  functions->page_clear        = djvu_page_clear;
-  functions->page_search_text  = djvu_page_search_text;
-  functions->page_get_text     = djvu_page_get_text;
-  functions->page_render       = djvu_page_render;
-#ifdef HAVE_CAIRO
-  functions->page_render_cairo = djvu_page_render_cairo;
+  functions->document_open           = djvu_document_open;
+  functions->document_free           = djvu_document_free;
+  functions->document_index_generate = djvu_document_index_generate;
+  functions->document_save_as        = djvu_document_save_as;
+  functions->page_init               = djvu_page_init;
+  functions->page_clear              = djvu_page_clear;
+  functions->page_search_text        = djvu_page_search_text;
+  functions->page_get_text           = djvu_page_get_text;
+  functions->page_render             = djvu_page_render;
+  #ifdef HAVE_CAIRO
+  functions->page_render_cairo       = djvu_page_render_cairo;
 #endif
 }
 
@@ -146,6 +149,35 @@ djvu_document_free(zathura_document_t* document, djvu_document_t* djvu_document)
   return ZATHURA_ERROR_OK;
 }
 
+girara_tree_node_t*
+djvu_document_index_generate(zathura_document_t* document, djvu_document_t*
+    djvu_document, zathura_error_t* error)
+{
+  if (document == NULL || djvu_document == NULL) {
+    if (error != NULL) {
+      *error = ZATHURA_ERROR_INVALID_ARGUMENTS;
+    }
+    return NULL;
+  }
+
+  miniexp_t outline = ddjvu_document_get_outline(djvu_document->document);
+  if (outline == miniexp_dummy || outline == miniexp_nil) {
+    return NULL;
+  }
+
+  if (miniexp_consp(outline) == 0 || miniexp_car(outline) != miniexp_symbol("bookmarks")) {
+    ddjvu_miniexp_release(djvu_document->document, outline);
+    return NULL;
+  }
+
+  girara_tree_node_t* root = girara_node_new(zathura_index_element_new("ROOT"));
+  build_index(miniexp_cdr(outline), root);
+
+  ddjvu_miniexp_release(djvu_document->document, outline);
+
+  return root;
+}
+
 zathura_error_t
 djvu_document_save_as(zathura_document_t* document, djvu_document_t* djvu_document, const char* path)
 {
@@ -176,7 +208,7 @@ djvu_document_save_as(zathura_document_t* document, djvu_document_t* djvu_docume
 }
 
 zathura_error_t
-djvu_page_init(zathura_page_t* page, void* data)
+djvu_page_init(zathura_page_t* page, void* UNUSED(data))
 {
   if (page == NULL) {
     return ZATHURA_ERROR_INVALID_ARGUMENTS;
@@ -206,7 +238,7 @@ djvu_page_init(zathura_page_t* page, void* data)
 }
 
 zathura_error_t
-djvu_page_clear(zathura_page_t* page, void* data)
+djvu_page_clear(zathura_page_t* page, void* UNUSED(data))
 {
   if (page == NULL) {
     return ZATHURA_ERROR_INVALID_ARGUMENTS;
@@ -216,7 +248,7 @@ djvu_page_clear(zathura_page_t* page, void* data)
 }
 
 girara_list_t*
-djvu_page_search_text(zathura_page_t* page, void* data, const char* text, zathura_error_t* error)
+djvu_page_search_text(zathura_page_t* page, void* UNUSED(data), const char* text, zathura_error_t* error)
 {
   if (page == NULL || text == NULL || strlen(text) == 0) {
     if (error != NULL) {
@@ -262,7 +294,8 @@ error_ret:
 }
 
 char*
-djvu_page_get_text(zathura_page_t* page, void* data, zathura_rectangle_t rectangle, zathura_error_t* error)
+djvu_page_get_text(zathura_page_t* page, void* UNUSED(data), zathura_rectangle_t
+    rectangle, zathura_error_t* error)
 {
   if (page == NULL) {
     if (error != NULL) {
@@ -339,7 +372,8 @@ error_ret:
 
 #ifdef HAVE_CAIRO
 zathura_error_t
-djvu_page_render_cairo(zathura_page_t* page, void* data, cairo_t* cairo, bool GIRARA_UNUSED(printing))
+djvu_page_render_cairo(zathura_page_t* page, void* UNUSED(data), cairo_t* cairo,
+    bool GIRARA_UNUSED(printing))
 {
   if (page == NULL || cairo == NULL) {
     return ZATHURA_ERROR_INVALID_ARGUMENTS;
@@ -393,7 +427,7 @@ djvu_page_render_cairo(zathura_page_t* page, void* data, cairo_t* cairo, bool GI
 #endif
 
 zathura_image_buffer_t*
-djvu_page_render(zathura_page_t* page, void* data, zathura_error_t* error)
+djvu_page_render(zathura_page_t* page, void* UNUSED(data), zathura_error_t* error)
 {
   if (page == NULL) {
     if (error != NULL) {
@@ -505,5 +539,43 @@ handle_messages(djvu_document_t* document, bool wait)
 
   while ((message = ddjvu_message_peek(context)) != NULL) {
     ddjvu_message_pop(context);
+  }
+}
+
+static void
+build_index(miniexp_t expression, girara_tree_node_t* root)
+{
+  if (expression == miniexp_nil || root == NULL) {
+    return;
+  }
+
+  while (miniexp_consp(expression) != 0) {
+    miniexp_t inner = miniexp_car(expression);
+
+    if (miniexp_consp(inner)
+        && miniexp_consp(miniexp_cdr(inner))
+        && miniexp_stringp(miniexp_car(inner))
+        && miniexp_stringp(miniexp_car(inner))
+       ) {
+      const char* name = miniexp_to_str(miniexp_car(inner));
+      const char* link = miniexp_to_str(miniexp_cadr(inner));
+
+      /* TODO: handle other links? */
+      if (link == NULL || link[0] != '#') {
+        expression = miniexp_cdr(expression);
+        continue;
+      }
+
+      zathura_index_element_t* index_element = zathura_index_element_new(name);
+      index_element->type = ZATHURA_LINK_TO_PAGE;
+      index_element->target.page_number = atoi(link + 1) - 1;
+
+      girara_tree_node_t* node = girara_node_append_data(root, index_element);
+
+      /* search recursive */
+      build_index(miniexp_cddr(inner), node);
+    }
+
+    expression = miniexp_cdr(expression);
   }
 }
