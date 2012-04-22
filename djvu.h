@@ -39,6 +39,18 @@ zathura_error_t djvu_document_open(zathura_document_t* document);
 zathura_error_t djvu_document_free(zathura_document_t* document, djvu_document_t* djvu_document);
 
 /**
+ * Generates the index of the document
+ *
+ * @param document Zathura document
+ * @param error Set to an error value (see zathura_error_t) if an
+ *   error occured
+ * @return Tree node object or NULL if an error occurred (e.g.: the document has
+ *   no index)
+ */
+girara_tree_node_t* djvu_document_index_generate(zathura_document_t* document,
+    djvu_document_t* djvu_document, zathura_error_t* error);
+
+/**
  * Saves the document to the given path
  *
  * @param document Zathura document
@@ -87,6 +99,17 @@ girara_list_t* djvu_page_search_text(zathura_page_t* page, void* data, const cha
  * @return The selected text (needs to be deallocated with g_free)
  */
 char* djvu_page_get_text(zathura_page_t* page, void* data, zathura_rectangle_t rectangle, zathura_error_t* error);
+
+/**
+ * Returns list of links
+ *
+ * @param page The page
+ * @param data Unused page data
+ * @param error Error code
+ * @return List of links or NULL if an error occured
+ */
+girara_list_t* djvu_page_links_get(zathura_page_t* page, void* data,
+    zathura_error_t* error);
 
 /**
  * Renders a page and returns a allocated image buffer which has to be freed
