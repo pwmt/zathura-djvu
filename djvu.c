@@ -572,8 +572,20 @@ build_index(miniexp_t expression, girara_tree_node_t* root)
       }
 
       zathura_index_element_t* index_element = zathura_index_element_new(name);
-      index_element->type = ZATHURA_LINK_TO_PAGE;
-      index_element->target.page_number = atoi(link + 1) - 1;
+      if (index_element == NULL) {
+        continue;
+      }
+
+      zathura_link_type_t type = ZATHURA_LINK_GOTO_DEST;
+      zathura_rectangle_t rect;
+      zathura_link_target_t target = { 0 };
+      target.page_number = atoi(link + 1) - 1;
+
+      index_element->link = zathura_link_new(type, rect, target);
+      if (index_element->link == NULL) {
+        zathura_index_element_free(index_element);
+        continue;
+      }
 
       girara_tree_node_t* node = girara_node_append_data(root, index_element);
 
