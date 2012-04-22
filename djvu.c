@@ -13,6 +13,9 @@
 /* forward declarations */
 static const char* get_extension(const char* path);
 static void build_index(miniexp_t expression, girara_tree_node_t* root);
+static bool exp_to_str(miniexp_t expression, const char** string);
+static bool exp_to_int(miniexp_t expression, int* integer);
+static bool exp_to_rect(miniexp_t expression, zathura_rectangle_t* rect);
 
 void
 register_functions(zathura_plugin_functions_t* functions)
@@ -25,6 +28,7 @@ register_functions(zathura_plugin_functions_t* functions)
   functions->page_clear              = djvu_page_clear;
   functions->page_search_text        = djvu_page_search_text;
   functions->page_get_text           = djvu_page_get_text;
+  functions->page_links_get          = djvu_page_links_get;
   functions->page_render             = djvu_page_render;
   #ifdef HAVE_CAIRO
   functions->page_render_cairo       = djvu_page_render_cairo;
@@ -375,6 +379,104 @@ error_ret:
   return NULL;
 }
 
+girara_list_t*
+djvu_page_links_get(zathura_page_t* page, void* UNUSED(data), zathura_error_t* error)
+{
+  if (page == NULL) {
+    if (error != NULL) {
+      *error = ZATHURA_ERROR_INVALID_ARGUMENTS;
+    }
+    goto error_ret;
+  }
+
+  zathura_document_t* document = zathura_page_get_document(page);
+  if (document == NULL) {
+    goto error_ret;
+  }
+
+  girara_list_t* list = girara_list_new2((girara_free_function_t) zathura_link_free);
+  if (list == NULL) {
+    if (error != NULL) {
+      *error = ZATHURA_ERROR_OUT_OF_MEMORY;
+    }
+    goto error_ret;
+  }
+
+  djvu_document_t* djvu_document = zathura_document_get_data(document);
+
+  miniexp_t annotations = miniexp_nil;
+  while ((annotations = ddjvu_document_get_pageanno(djvu_document->document,
+          zathura_page_get_index(page))) == miniexp_dummy) {
+    handle_messages(djvu_document, true);
+  }
+
+  if (annotations == miniexp_nil) {
+    goto error_free;
+  }
+
+  miniexp_t* hyperlinks = ddjvu_anno_get_hyperlinks(annotations);
+  for (miniexp_t* iter = hyperlinks; *iter != NULL; iter++) {
+    if (miniexp_car(*iter) != miniexp_symbol("maparea")) {
+      continue;
+    }
+
+    miniexp_t inner = miniexp_cdr(*iter);
+
+    /* extract url information */
+    const char* url = NULL;
+
+    if (miniexp_caar(inner) == miniexp_symbol("url")) {
+      if (exp_to_str(miniexp_caddr(miniexp_car(inner)), &url) == false) {
+        continue;
+      }
+    } else {
+      if (exp_to_str(miniexp_car(inner), &url) == false) {
+        continue;
+      }
+    }
+
+    /* skip comment */
+    inner = miniexp_cdr(inner);
+
+    /* extract link area */
+    inner = miniexp_cdr(inner);
+
+    zathura_rectangle_t rect = { 0, 0, 0, 0 };
+    if (exp_to_rect(miniexp_car(inner), &rect) == false) {
+      continue;
+    }
+
+    /* update rect */
+    unsigned int page_height = zathura_page_get_height(page) / ZATHURA_DJVU_SCALE;
+    rect.x1 = rect.x1 * ZATHURA_DJVU_SCALE;
+    rect.x2 = rect.x2 * ZATHURA_DJVU_SCALE;
+    rect.y1 = (page_height - rect.y1) * ZATHURA_DJVU_SCALE;
+    rect.y2 = (page_height - rect.y2) * ZATHURA_DJVU_SCALE;
+
+    /* create zathura link */
+    zathura_link_type_t type = ZATHURA_LINK_URI;
+    zathura_link_target_t target;
+    target.value = (char*) url;
+
+    zathura_link_t* link = zathura_link_new(type, rect, target);
+    if (link != NULL) {
+      girara_list_append(list, link);
+    }
+  }
+
+  return list;
+
+error_free:
+
+  if (list != NULL) {
+    girara_list_free(list);
+  }
+
+error_ret:
+
+  return NULL;
+}
+
 #ifdef HAVE_CAIRO
 zathura_error_t
 djvu_page_render_cairo(zathura_page_t* page, void* UNUSED(data), cairo_t* cairo,
@@ -595,4 +697,102 @@ build_index(miniexp_t expression, girara_tree_node_t* root)
 
     expression = miniexp_cdr(expression);
   }
+}
+
+static bool
+exp_to_str(miniexp_t expression, const char** string)
+{
+  if (string == NULL) {
+    return false;
+  }
+
+  if (miniexp_stringp(expression)) {
+    *string = miniexp_to_str(expression);
+    return true;
+  }
+
+  return false;
+}
+
+static bool
+exp_to_int(miniexp_t expression, int* integer)
+{
+  if (integer == NULL) {
+    return false;
+  }
+
+  if (miniexp_numberp(expression)) {
+    *integer = miniexp_to_int(expression);
+    return true;
+  }
+
+  return false;
+}
+
+static bool
+exp_to_rect(miniexp_t expression, zathura_rectangle_t* rect)
+{
+  if ((miniexp_car(expression) == miniexp_symbol("rect")
+        || miniexp_car(expression) == miniexp_symbol("oval"))
+      && miniexp_length(expression) == 5) {
+    int min_x  = 0;
+    int min_y  = 0;
+    int width  = 0;
+    int height = 0;
+
+    miniexp_t iter = miniexp_cdr(expression);
+    if (exp_to_int(miniexp_car(iter), &min_x) == false) {
+      return false;
+    }
+    iter = miniexp_cdr(iter);
+    if (exp_to_int(miniexp_car(iter), &min_y) == false) {
+      return false;
+    }
+    iter = miniexp_cdr(iter);
+    if (exp_to_int(miniexp_car(iter), &width) == false) {
+      return false;
+    }
+    iter = miniexp_cdr(iter);
+    if (exp_to_int(miniexp_car(iter), &height) == false) {
+      return false;
+    }
+
+    rect->x1 = min_x;
+    rect->x2 = min_x + width;
+    rect->y1 = min_y;
+    rect->y2 = min_y + height;
+  } else if (miniexp_car(expression) == miniexp_symbol("poly")
+      && miniexp_length(expression) >= 5) {
+    int min_x = 0;
+    int min_y = 0;
+    int max_x = 0;
+    int max_y = 0;
+
+    miniexp_t iter = miniexp_cdr(expression);
+    while (iter != miniexp_nil) {
+      int x = 0;
+      int y = 0;
+
+      if (exp_to_int(miniexp_car(iter), &x) == false) {
+        return false;
+      }
+      iter = miniexp_cdr(iter);
+      if (exp_to_int(miniexp_car(iter), &y) == false) {
+        return false;
+      }
+      iter = miniexp_cdr(iter);
+
+      min_x = MIN(min_x, x);
+      min_y = MIN(min_y, y);
+      max_x = MAX(max_x, x);
+      max_y = MAX(max_y, y);
+    }
+
+    rect->x1 = min_x;
+    rect->x2 = max_x;
+    rect->y1 = min_y;
+    rect->y2 = max_y;
+  }
+
+  return true;
 }

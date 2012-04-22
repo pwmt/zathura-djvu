@@ -101,6 +101,17 @@ girara_list_t* djvu_page_search_text(zathura_page_t* page, void* data, const cha
 char* djvu_page_get_text(zathura_page_t* page, void* data, zathura_rectangle_t rectangle, zathura_error_t* error);
 
 /**
+ * Returns list of links
+ *
+ * @param page The page
+ * @param data Unused page data
+ * @param error Error code
+ * @return List of links or NULL if an error occured
+ */
+girara_list_t* djvu_page_links_get(zathura_page_t* page, void* data,
+    zathura_error_t* error);
+
+/**
  * Renders a page and returns a allocated image buffer which has to be freed
  * with zathura_image_buffer_free
  *
