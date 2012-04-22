@@ -423,14 +423,14 @@ djvu_page_links_get(zathura_page_t* page, void* UNUSED(data), zathura_error_t* e
     miniexp_t inner = miniexp_cdr(*iter);
 
     /* extract url information */
-    const char* url = NULL;
+    const char* target_string = NULL;
 
     if (miniexp_caar(inner) == miniexp_symbol("url")) {
-      if (exp_to_str(miniexp_caddr(miniexp_car(inner)), &url) == false) {
+      if (exp_to_str(miniexp_caddr(miniexp_car(inner)), &target_string) == false) {
         continue;
       }
     } else {
-      if (exp_to_str(miniexp_car(inner), &url) == false) {
+      if (exp_to_str(miniexp_car(inner), &target_string) == false) {
         continue;
       }
     }
@@ -450,13 +450,26 @@ djvu_page_links_get(zathura_page_t* page, void* UNUSED(data), zathura_error_t* e
     unsigned int page_height = zathura_page_get_height(page) / ZATHURA_DJVU_SCALE;
     rect.x1 = rect.x1 * ZATHURA_DJVU_SCALE;
     rect.x2 = rect.x2 * ZATHURA_DJVU_SCALE;
-    rect.y1 = (page_height - rect.y1) * ZATHURA_DJVU_SCALE;
-    rect.y2 = (page_height - rect.y2) * ZATHURA_DJVU_SCALE;
+    double tmp = rect.y1;
+    rect.y1 = (page_height - rect.y2) * ZATHURA_DJVU_SCALE;
+    rect.y2 = (page_height - tmp)     * ZATHURA_DJVU_SCALE;
 
     /* create zathura link */
-    zathura_link_type_t type = ZATHURA_LINK_URI;
+    zathura_link_type_t type = ZATHURA_LINK_INVALID;
     zathura_link_target_t target;
-    target.value = (char*) url;
+
+    /* goto page */
+    if (target_string[0] == '#' && target_string[1] == 'p') {
+      type = ZATHURA_LINK_GOTO_DEST;
+      target.page_number = atoi(target_string + 2) - 1;
+    /* url or other? */
+    } else if (strstr(target_string, "//") != NULL) {
+      type = ZATHURA_LINK_URI;
+      target.value = (char*) target_string;
+    /* TODO: Parse all different links */
+    } else {
+      continue;
+    }
 
     zathura_link_t* link = zathura_link_new(type, rect, target);
     if (link != NULL) {
