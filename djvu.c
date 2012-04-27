@@ -20,18 +20,18 @@ static bool exp_to_rect(miniexp_t expression, zathura_rectangle_t* rect);
 void
 register_functions(zathura_plugin_functions_t* functions)
 {
-  functions->document_open           = djvu_document_open;
-  functions->document_free           = djvu_document_free;
-  functions->document_index_generate = djvu_document_index_generate;
-  functions->document_save_as        = djvu_document_save_as;
-  functions->page_init               = djvu_page_init;
-  functions->page_clear              = djvu_page_clear;
-  functions->page_search_text        = djvu_page_search_text;
-  functions->page_get_text           = djvu_page_get_text;
-  functions->page_links_get          = djvu_page_links_get;
-  functions->page_render             = djvu_page_render;
-  #ifdef HAVE_CAIRO
-  functions->page_render_cairo       = djvu_page_render_cairo;
+  functions->document_open           = (zathura_plugin_document_open_t) djvu_document_open;
+  functions->document_free           = (zathura_plugin_document_free_t) djvu_document_free;
+  functions->document_index_generate = (zathura_plugin_document_index_generate_t) djvu_document_index_generate;
+  functions->document_save_as        = (zathura_plugin_document_save_as_t) djvu_document_save_as;
+  functions->page_init               = (zathura_plugin_page_init_t) djvu_page_init;
+  functions->page_clear              = (zathura_plugin_page_clear_t) djvu_page_clear;
+  functions->page_search_text        = (zathura_plugin_page_search_text_t) djvu_page_search_text;
+  functions->page_get_text           = (zathura_plugin_page_get_text_t) djvu_page_get_text;
+  functions->page_links_get          = (zathura_plugin_page_links_get_t) djvu_page_links_get;
+  functions->page_render             = (zathura_plugin_page_render_t) djvu_page_render;
+#ifdef HAVE_CAIRO
+  functions->page_render_cairo       = (zathura_plugin_page_render_cairo_t) djvu_page_render_cairo;
 #endif
 }
 
