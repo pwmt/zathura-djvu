@@ -37,7 +37,7 @@ register_functions(zathura_plugin_functions_t* functions)
 
 ZATHURA_PLUGIN_REGISTER(
   "djvu",
-  0, 1, 0,
+  VERSION_MAJOR, VERSION_MINOR, VERSION_REV,
   register_functions,
   ZATHURA_PLUGIN_MIMETYPES({
     "image/vnd.djvu"
