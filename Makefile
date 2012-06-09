@@ -16,6 +16,10 @@ INCS += $(CAIRO_INC)
 LIBS += $(CAIRO_LIB)
 endif
 
+CPPFLAGS += "-DVERSION_MAJOR=${VERSION_MAJOR}"
+CPPFLAGS += "-DVERSION_MINOR=${VERSION_MINOR}"
+CPPFLAGS += "-DVERSION_REV=${VERSION_REV}"
+
 all: options ${PLUGIN}.so
 
 zathura-version-check:

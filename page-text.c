@@ -2,6 +2,8 @@
 
 #include <libdjvu/miniexp.h>
 #include <string.h>
+#include <sys/types.h>
+#include <glib.h>
 
 #include "page-text.h"
 #include "internal.h"
@@ -50,7 +52,7 @@ djvu_page_text_new(djvu_document_t* document, zathura_page_t* page)
 
   /* read page text */
   while ((page_text->text_information =
-        ddjvu_document_get_pagetext(document->document, page->number, "char"))
+        ddjvu_document_get_pagetext(document->document, zathura_page_get_index(page), "char"))
       == miniexp_dummy) {
     handle_messages(document, true);
   }
@@ -172,8 +174,8 @@ djvu_page_text_search(djvu_page_text_t* page_text, const char* text)
     page_text->rectangle->y2 = ZATHURA_DJVU_SCALE * page_text->rectangle->y2;
 
     /* invert */
-    int y1 = page_text->page->height - page_text->rectangle->y1;
-    page_text->rectangle->y1 = page_text->page->height - page_text->rectangle->y2;
+    int y1 = zathura_page_get_height(page_text->page) - page_text->rectangle->y1;
+    page_text->rectangle->y1 = zathura_page_get_height(page_text->page) - page_text->rectangle->y2;
     page_text->rectangle->y2 = y1;
 
     /* add rectangle to result list */

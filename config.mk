@@ -1,9 +1,12 @@
 # See LICENSE file for license and copyright information
 
-VERSION = 0.1.1
+VERSION_MAJOR = 0
+VERSION_MINOR = 2
+VERSION_REV = 0
+VERSION = ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_REV}
 
 # minimum required zathura version
-ZATHURA_MIN_VERSION = 0.1.1
+ZATHURA_MIN_VERSION = 0.2.0
 ZATHURA_VERSION_CHECK ?= $(shell pkg-config --atleast-version=$(ZATHURA_MIN_VERSION) zathura; echo $$?)
 
 # paths
@@ -33,7 +36,7 @@ INCS = ${GIRARA_INC} ${GLIB_INC} ${DJVU_INC} ${ZATHURA_INC}
 LIBS = ${GIRARA_LIB} ${GLIB_LIB} ${DJVU_LIB}
 
 # flags
-CFLAGS += -std=c99 -fPIC -pedantic -Wall -Wno-format-zero-length $(INCS)
+CFLAGS += -std=c99 -fPIC -pedantic -Wall -Wno-format-zero-length -Wextra $(INCS)
 
 # debug
 DFLAGS ?= -g
