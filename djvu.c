@@ -693,7 +693,8 @@ build_index(djvu_document_t *djvu_document, miniexp_t expression, girara_tree_no
       zathura_link_type_t type = ZATHURA_LINK_GOTO_DEST;
       zathura_rectangle_t rect;
       zathura_link_target_t target = { 0 };
-
+      target.destination_type = ZATHURA_LINK_DESTINATION_XYZ;
+      
       /* Check if link+1 contains a number */
       int number=1;
       for (unsigned int k=1; k <= strlen(link); k++) {
