@@ -672,7 +672,7 @@ build_index(djvu_document_t *djvu_document, miniexp_t expression, girara_tree_no
 
   int fileno = ddjvu_document_get_filenum(djvu_document->document);
   int curfile = 0;
-    
+
   while (miniexp_consp(expression) != 0) {
     miniexp_t inner = miniexp_car(expression);
 
@@ -694,42 +694,42 @@ build_index(djvu_document_t *djvu_document, miniexp_t expression, girara_tree_no
       zathura_rectangle_t rect;
       zathura_link_target_t target = { 0 };
       target.destination_type = ZATHURA_LINK_DESTINATION_XYZ;
-      
+
       /* Check if link+1 contains a number */
-      int number=1;
-      for (unsigned int k=1; k < strlen(link); k++) {
-	if (!isdigit(link[k])) {
-	  number=0;
-	  break;
-	}
+      bool number = true;
+      const size_t linklen = strlen(link);
+      for (unsigned int k = 1; k < linklen; k++) {
+	      if (!isdigit(link[k])) {
+	        number = false;
+	        break;
+	      }
       }
-      
-      /* if link starts with a number assume it is a number */     
-      if (number) {
-	target.page_number = atoi(link + 1) - 1;
 
-      /* otherwise assume it is an id for a page */
+      /* if link starts with a number assume it is a number */
+      if (number == true) {
+	      target.page_number = atoi(link + 1) - 1;
       } else {
-	ddjvu_fileinfo_t info;
-	int f, i;
-	for(i=0; i < fileno; i++) {
-	  f = (curfile + i) % fileno;
-	  ddjvu_document_get_fileinfo(djvu_document->document, f, &info);
-	  if (info.id != NULL && !strcmp(link+1, info.id)) {
-	    break;
-	  }
-	}
-	/* got a page */
-	if (i < fileno && info.pageno >= 0) {
-	  curfile = (f+1) % fileno;
-	  target.page_number = info.pageno;
+        /* otherwise assume it is an id for a page */
+        ddjvu_fileinfo_t info;
+        int f, i;
+        for (i=0; i < fileno; i++) {
+          f = (curfile + i) % fileno;
+          ddjvu_document_get_fileinfo(djvu_document->document, f, &info);
+          if (info.id != NULL && !strcmp(link+1, info.id)) {
+            break;
+	        }
+	      }
 
-        /* give up */
-	} else {        
-	  expression = miniexp_cdr(expression);
-	  continue;
-	}
-      }      
+        /* got a page */
+        if (i < fileno && info.pageno >= 0) {
+          curfile = (f+1) % fileno;
+          target.page_number = info.pageno;
+        } else {
+          /* give up */
+          expression = miniexp_cdr(expression);
+          continue;
+        }
+      }
 
       zathura_index_element_t* index_element = zathura_index_element_new(name);
       if (index_element == NULL) {
