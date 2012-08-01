@@ -697,7 +697,7 @@ build_index(djvu_document_t *djvu_document, miniexp_t expression, girara_tree_no
       
       /* Check if link+1 contains a number */
       int number=1;
-      for (unsigned int k=1; k <= strlen(link); k++) {
+      for (unsigned int k=1; k < strlen(link); k++) {
 	if (!isdigit(link[k])) {
 	  number=0;
 	  break;
