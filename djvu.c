@@ -1,6 +1,7 @@
 /* See LICENSE file for license and copyright information */
 
 #include <stdlib.h>
+#include <ctype.h>
 #include <girara/datastructures.h>
 #include <string.h>
 #include <libdjvu/miniexp.h>
@@ -12,7 +13,7 @@
 
 /* forward declarations */
 static const char* get_extension(const char* path);
-static void build_index(miniexp_t expression, girara_tree_node_t* root);
+static void build_index(djvu_document_t *djvu_document, miniexp_t expression, girara_tree_node_t* root);
 static bool exp_to_str(miniexp_t expression, const char** string);
 static bool exp_to_int(miniexp_t expression, int* integer);
 static bool exp_to_rect(miniexp_t expression, zathura_rectangle_t* rect);
@@ -180,7 +181,7 @@ djvu_document_index_generate(zathura_document_t* document, djvu_document_t*
   }
 
   girara_tree_node_t* root = girara_node_new(zathura_index_element_new("ROOT"));
-  build_index(miniexp_cdr(outline), root);
+  build_index(djvu_document, miniexp_cdr(outline), root);
 
   ddjvu_miniexp_release(djvu_document->document, outline);
 
@@ -555,7 +556,7 @@ djvu_page_render(zathura_page_t* page, void* UNUSED(data), zathura_error_t* erro
     }
     return NULL;
   }
-
+ 
   zathura_document_t* document = zathura_page_get_document(page);
   if (document == NULL) {
     return NULL;
@@ -663,12 +664,15 @@ handle_messages(djvu_document_t* document, bool wait)
 }
 
 static void
-build_index(miniexp_t expression, girara_tree_node_t* root)
+build_index(djvu_document_t *djvu_document, miniexp_t expression, girara_tree_node_t* root)
 {
   if (expression == miniexp_nil || root == NULL) {
     return;
   }
 
+  int fileno = ddjvu_document_get_filenum(djvu_document->document);
+  int curfile = 0;
+    
   while (miniexp_consp(expression) != 0) {
     miniexp_t inner = miniexp_car(expression);
 
@@ -686,15 +690,50 @@ build_index(miniexp_t expression, girara_tree_node_t* root)
         continue;
       }
 
+      zathura_link_type_t type = ZATHURA_LINK_GOTO_DEST;
+      zathura_rectangle_t rect;
+      zathura_link_target_t target = { 0 };
+
+      /* Check if link+1 contains a number */
+      int number=1;
+      for (unsigned int k=1; k <= strlen(link); k++) {
+	if (!isdigit(link[k])) {
+	  number=0;
+	  break;
+	}
+      }
+      
+      /* if link starts with a number assume it is a number */     
+      if (number) {
+	target.page_number = atoi(link + 1) - 1;
+
+      /* otherwise assume it is an id for a page */
+      } else {
+	ddjvu_fileinfo_t info;
+	int f, i;
+	for(i=0; i < fileno; i++) {
+	  f = (curfile + i) % fileno;
+	  ddjvu_document_get_fileinfo(djvu_document->document, f, &info);
+	  if (info.id != NULL && !strcmp(link+1, info.id)) {
+	    break;
+	  }
+	}
+	/* got a page */
+	if (i < fileno && info.pageno >= 0) {
+	  curfile = (f+1) % fileno;
+	  target.page_number = info.pageno;
+
+        /* give up */
+	} else {        
+	  expression = miniexp_cdr(expression);
+	  continue;
+	}
+      }      
+
       zathura_index_element_t* index_element = zathura_index_element_new(name);
       if (index_element == NULL) {
         continue;
       }
-
-      zathura_link_type_t type = ZATHURA_LINK_GOTO_DEST;
-      zathura_rectangle_t rect;
-      zathura_link_target_t target = { 0 };
-      target.page_number = atoi(link + 1) - 1;
 
       index_element->link = zathura_link_new(type, rect, target);
       if (index_element->link == NULL) {
@@ -705,7 +744,7 @@ build_index(miniexp_t expression, girara_tree_node_t* root)
       girara_tree_node_t* node = girara_node_append_data(root, index_element);
 
       /* search recursive */
-      build_index(miniexp_cddr(inner), node);
+      build_index(djvu_document, miniexp_cddr(inner), node);
     }
 
     expression = miniexp_cdr(expression);
