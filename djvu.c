@@ -519,7 +519,9 @@ djvu_page_render_cairo(zathura_page_t* page, void* UNUSED(data), cairo_t* cairo,
 
   cairo_surface_t* surface = cairo_get_target(cairo);
 
-  if (surface == NULL) {
+  if (surface == NULL ||
+      cairo_surface_status(surface) != CAIRO_STATUS_SUCCESS ||
+      cairo_surface_get_type(surface) != CAIRO_SURFACE_TYPE_IMAGE) {
     ddjvu_page_release(djvu_page);
     return ZATHURA_ERROR_UNKNOWN;
   }
