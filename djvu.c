@@ -457,7 +457,7 @@ djvu_page_links_get(zathura_page_t* page, void* UNUSED(data), zathura_error_t* e
 
     /* create zathura link */
     zathura_link_type_t type = ZATHURA_LINK_INVALID;
-    zathura_link_target_t target;
+    zathura_link_target_t target = { ZATHURA_LINK_DESTINATION_UNKNOWN, NULL, 0, -1, -1, -1, -1, 0 };;
 
     /* goto page */
     if (target_string[0] == '#' && target_string[1] == 'p') {
