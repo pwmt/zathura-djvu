@@ -38,7 +38,7 @@ INCS = ${GIRARA_INC} ${GLIB_INC} ${DJVU_INC} ${ZATHURA_INC}
 LIBS = ${GIRARA_LIB} ${GLIB_LIB} ${DJVU_LIB}
 
 # flags
-CFLAGS += -std=c99 -fPIC -pedantic -Wall -Wno-format-zero-length -Wextra $(INCS)
+CFLAGS += -std=c11 -fPIC -pedantic -Wall -Wno-format-zero-length -Wextra $(INCS)
 
 # debug
 DFLAGS ?= -g
