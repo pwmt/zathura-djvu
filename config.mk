@@ -37,7 +37,10 @@ endif
 INCS = ${GIRARA_INC} ${GLIB_INC} ${DJVU_INC} ${ZATHURA_INC}
 LIBS = ${GIRARA_LIB} ${GLIB_LIB} ${DJVU_LIB}
 
-# flags
+# pre-processor flags
+CPPFLAGS += -D_FILE_OFFSET_BITS=64
+
+# compiler flags
 CFLAGS += -std=c11 -fPIC -pedantic -Wall -Wno-format-zero-length -Wextra $(INCS)
 
 # debug
