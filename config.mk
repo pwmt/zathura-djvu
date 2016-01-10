@@ -43,6 +43,9 @@ CPPFLAGS += -D_FILE_OFFSET_BITS=64
 # compiler flags
 CFLAGS += -std=c11 -fPIC -pedantic -Wall -Wno-format-zero-length -Wextra $(INCS)
 
+# linker flags
+LDFLAGS += -fPIC
+
 # debug
 DFLAGS ?= -g
 
