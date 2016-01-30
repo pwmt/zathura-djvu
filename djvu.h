@@ -24,7 +24,7 @@ typedef struct djvu_document_s
  * Open a DjVU document
  *
  * @param document Zathura document
- * @return ZATHURA_ERROR_OK when no error occured, otherwise see
+ * @return ZATHURA_ERROR_OK when no error occurred, otherwise see
  *    zathura_error_t
  */
 zathura_error_t djvu_document_open(zathura_document_t* document);
@@ -33,7 +33,7 @@ zathura_error_t djvu_document_open(zathura_document_t* document);
  * Closes and frees the internal document structure
  *
  * @param document Zathura document
- * @return ZATHURA_ERROR_OK when no error occured, otherwise see
+ * @return ZATHURA_ERROR_OK when no error occurred, otherwise see
  *    zathura_error_t
  */
 zathura_error_t djvu_document_free(zathura_document_t* document, djvu_document_t* djvu_document);
@@ -43,7 +43,7 @@ zathura_error_t djvu_document_free(zathura_document_t* document, djvu_document_t
  *
  * @param document Zathura document
  * @param error Set to an error value (see zathura_error_t) if an
- *   error occured
+ *   error occurred
  * @return Tree node object or NULL if an error occurred (e.g.: the document has
  *   no index)
  */
@@ -55,7 +55,7 @@ girara_tree_node_t* djvu_document_index_generate(zathura_document_t* document,
  *
  * @param document Zathura document
  * @param path File path
- * @return ZATHURA_ERROR_OK when no error occured, otherwise see
+ * @return ZATHURA_ERROR_OK when no error occurred, otherwise see
  *    zathura_error_t
  */
 zathura_error_t djvu_document_save_as(zathura_document_t* document, djvu_document_t* djvu_document, const char* path);
@@ -64,7 +64,7 @@ zathura_error_t djvu_document_save_as(zathura_document_t* document, djvu_documen
  * Initializes the page
  *
  * @param page The page object
- * @return ZATHURA_ERROR_OK when no error occured, otherwise see
+ * @return ZATHURA_ERROR_OK when no error occurred, otherwise see
  *    zathura_error_t
  */
 zathura_error_t djvu_page_init(zathura_page_t* page, void* data);
@@ -73,7 +73,7 @@ zathura_error_t djvu_page_init(zathura_page_t* page, void* data);
  * Frees a DjVu page
  *
  * @param page Page
- * @return ZATHURA_ERROR_OK when no error occured, otherwise see
+ * @return ZATHURA_ERROR_OK when no error occurred, otherwise see
  *    zathura_error_t
  */
 zathura_error_t djvu_page_clear(zathura_page_t* page, void* data);
@@ -84,7 +84,7 @@ zathura_error_t djvu_page_clear(zathura_page_t* page, void* data);
  * @param page Page
  * @param text Search item
  * @param error Set to an error value (see zathura_error_t) if an
- *   error occured
+ *   error occurred
  * @return List of search results or NULL if an error occurred
  */
 girara_list_t* djvu_page_search_text(zathura_page_t* page, void* data, const char* text, zathura_error_t* error);
@@ -95,7 +95,7 @@ girara_list_t* djvu_page_search_text(zathura_page_t* page, void* data, const cha
  * @param page Page
  * @param rectangle Selection
  * @error Set to an error value (see \ref zathura_error_t) if an error
- * occured
+ * occurred
  * @return The selected text (needs to be deallocated with g_free)
  */
 char* djvu_page_get_text(zathura_page_t* page, void* data, zathura_rectangle_t rectangle, zathura_error_t* error);
@@ -106,7 +106,7 @@ char* djvu_page_get_text(zathura_page_t* page, void* data, zathura_rectangle_t r
  * @param page The page
  * @param data Unused page data
  * @param error Error code
- * @return List of links or NULL if an error occured
+ * @return List of links or NULL if an error occurred
  */
 girara_list_t* djvu_page_links_get(zathura_page_t* page, void* data,
     zathura_error_t* error);
@@ -117,7 +117,7 @@ girara_list_t* djvu_page_links_get(zathura_page_t* page, void* data,
  *
  * @param page Page
  * @param error Set to an error value (see zathura_error_t) if an
- *   error occured
+ *   error occurred
  * @return Image buffer or NULL if an error occurred
  */
 zathura_image_buffer_t* djvu_page_render(zathura_page_t* page, void* data, zathura_error_t* error);
@@ -129,7 +129,7 @@ zathura_image_buffer_t* djvu_page_render(zathura_page_t* page, void* data, zathu
  * @param page Page
  * @param cairo Cairo object
  * @param printing Set to true if page should be rendered for printing
- * @return ZATHURA_ERROR_OK when no error occured, otherwise see
+ * @return ZATHURA_ERROR_OK when no error occurred, otherwise see
  *    zathura_error_t
  */
 zathura_error_t djvu_page_render_cairo(zathura_page_t* page, void* data, cairo_t* cairo, bool printing);
