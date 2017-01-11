@@ -31,7 +31,7 @@ typedef struct djvu_page_text_s {
  *
  * @param document The document
  * @param page_number The number of the page
- * @return The page object or NULL if an error occured
+ * @return The page object or NULL if an error occurred
  */
 GIRARA_HIDDEN djvu_page_text_t* djvu_page_text_new(djvu_document_t* document,
     zathura_page_t* page);
@@ -44,11 +44,11 @@ GIRARA_HIDDEN djvu_page_text_t* djvu_page_text_new(djvu_document_t* document,
 GIRARA_HIDDEN void djvu_page_text_free(djvu_page_text_t* page_text);
 
 /**
- * Searchs the page for a specific key word and returns a list of results
+ * Searches the page for a specific key word and returns a list of results
  *
  * @param page_text The djvu page text object
  * @param text The text to search
- * @return List of results or NULL if an error occured
+ * @return List of results or NULL if an error occurred
  */
 GIRARA_HIDDEN girara_list_t* djvu_page_text_search(djvu_page_text_t* page_text,
     const char* text);
@@ -58,7 +58,7 @@ GIRARA_HIDDEN girara_list_t* djvu_page_text_search(djvu_page_text_t* page_text,
  *
  * @param page_text The djvu page text object
  * @param rectangle The area of where the text should be copied
- * @return Copy of the text or NULL if an error occured or if the area is empty
+ * @return Copy of the text or NULL if an error occurred or if the area is empty
  */
 GIRARA_HIDDEN char* djvu_page_text_select(djvu_page_text_t* page_text,
     zathura_rectangle_t rectangle);
