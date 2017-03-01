@@ -693,7 +693,7 @@ build_index(djvu_document_t *djvu_document, miniexp_t expression, girara_tree_no
       }
 
       zathura_link_type_t type = ZATHURA_LINK_GOTO_DEST;
-      zathura_rectangle_t rect;
+      zathura_rectangle_t rect = { 0 };
       zathura_link_target_t target = { 0 };
       target.destination_type = ZATHURA_LINK_DESTINATION_XYZ;
 
