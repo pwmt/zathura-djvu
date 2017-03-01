@@ -701,15 +701,15 @@ build_index(djvu_document_t *djvu_document, miniexp_t expression, girara_tree_no
       bool number = true;
       const size_t linklen = strlen(link);
       for (unsigned int k = 1; k < linklen; k++) {
-	      if (!isdigit(link[k])) {
-	        number = false;
-	        break;
-	      }
+        if (!isdigit(link[k])) {
+          number = false;
+          break;
+        }
       }
 
       /* if link starts with a number assume it is a number */
       if (number == true) {
-	      target.page_number = atoi(link + 1) - 1;
+        target.page_number = atoi(link + 1) - 1;
       } else {
         /* otherwise assume it is an id for a page */
         ddjvu_fileinfo_t info;
@@ -719,8 +719,8 @@ build_index(djvu_document_t *djvu_document, miniexp_t expression, girara_tree_no
           ddjvu_document_get_fileinfo(djvu_document->document, f, &info);
           if (info.id != NULL && !strcmp(link+1, info.id)) {
             break;
-	        }
-	      }
+          }
+        }
 
         /* got a page */
         if (i < fileno && info.pageno >= 0) {
