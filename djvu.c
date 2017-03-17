@@ -31,9 +31,7 @@ register_functions(zathura_plugin_functions_t* functions)
   functions->page_get_text           = (zathura_plugin_page_get_text_t) djvu_page_get_text;
   functions->page_links_get          = (zathura_plugin_page_links_get_t) djvu_page_links_get;
   functions->page_render             = (zathura_plugin_page_render_t) djvu_page_render;
-#ifdef HAVE_CAIRO
   functions->page_render_cairo       = (zathura_plugin_page_render_cairo_t) djvu_page_render_cairo;
-#endif
 }
 
 ZATHURA_PLUGIN_REGISTER(
@@ -491,7 +489,6 @@ error_ret:
   return NULL;
 }
 
-#ifdef HAVE_CAIRO
 zathura_error_t
 djvu_page_render_cairo(zathura_page_t* page, void* UNUSED(data), cairo_t* cairo,
     bool GIRARA_UNUSED(printing))
@@ -547,7 +544,6 @@ djvu_page_render_cairo(zathura_page_t* page, void* UNUSED(data), cairo_t* cairo,
 
   return ZATHURA_ERROR_OK;
 }
-#endif
 
 zathura_image_buffer_t*
 djvu_page_render(zathura_page_t* page, void* UNUSED(data), zathura_error_t* error)

@@ -34,8 +34,8 @@ ifeq (,${PLUGINDIR})
 PLUGINDIR = ${LIBDIR}/zathura
 endif
 
-INCS = ${GIRARA_INC} ${GLIB_INC} ${DJVU_INC} ${ZATHURA_INC}
-LIBS = ${GIRARA_LIB} ${GLIB_LIB} ${DJVU_LIB}
+INCS = ${GIRARA_INC} ${GLIB_INC} ${DJVU_INC} ${CAIRO_INC} ${ZATHURA_INC}
+LIBS = ${GIRARA_LIB} ${GLIB_LIB} ${DJVU_LIB} ${CAIRO_LIB}
 
 # pre-processor flags
 CPPFLAGS += -D_FILE_OFFSET_BITS=64
@@ -48,9 +48,6 @@ LDFLAGS += -fPIC
 
 # debug
 DFLAGS ?= -g
-
-# build with cairo support?
-WITH_CAIRO ?= 1
 
 # compiler
 CC ?= gcc

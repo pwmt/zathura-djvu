@@ -6,9 +6,7 @@
 #include <stdbool.h>
 #include <zathura/plugin-api.h>
 #include <libdjvu/ddjvuapi.h>
-#ifdef HAVE_CAIRO
 #include <cairo.h>
-#endif
 
 /**
  * DjVu document
@@ -122,7 +120,6 @@ girara_list_t* djvu_page_links_get(zathura_page_t* page, void* data,
  */
 zathura_image_buffer_t* djvu_page_render(zathura_page_t* page, void* data, zathura_error_t* error);
 
-#ifdef HAVE_CAIRO
 /**
  * Renders a page onto a cairo object
  *
@@ -133,6 +130,5 @@ zathura_image_buffer_t* djvu_page_render(zathura_page_t* page, void* data, zathu
  *    zathura_error_t
  */
 zathura_error_t djvu_page_render_cairo(zathura_page_t* page, void* data, cairo_t* cairo, bool printing);
-#endif
 
 #endif // DJVU_H
