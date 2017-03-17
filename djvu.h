@@ -25,7 +25,7 @@ typedef struct djvu_document_s
  * @return ZATHURA_ERROR_OK when no error occurred, otherwise see
  *    zathura_error_t
  */
-zathura_error_t djvu_document_open(zathura_document_t* document);
+GIRARA_HIDDEN zathura_error_t djvu_document_open(zathura_document_t* document);
 
 /**
  * Closes and frees the internal document structure
@@ -34,7 +34,7 @@ zathura_error_t djvu_document_open(zathura_document_t* document);
  * @return ZATHURA_ERROR_OK when no error occurred, otherwise see
  *    zathura_error_t
  */
-zathura_error_t djvu_document_free(zathura_document_t* document, djvu_document_t* djvu_document);
+GIRARA_HIDDEN zathura_error_t djvu_document_free(zathura_document_t* document, djvu_document_t* djvu_document);
 
 /**
  * Generates the index of the document
@@ -45,7 +45,7 @@ zathura_error_t djvu_document_free(zathura_document_t* document, djvu_document_t
  * @return Tree node object or NULL if an error occurred (e.g.: the document has
  *   no index)
  */
-girara_tree_node_t* djvu_document_index_generate(zathura_document_t* document,
+GIRARA_HIDDEN girara_tree_node_t* djvu_document_index_generate(zathura_document_t* document,
     djvu_document_t* djvu_document, zathura_error_t* error);
 
 /**
@@ -56,7 +56,7 @@ girara_tree_node_t* djvu_document_index_generate(zathura_document_t* document,
  * @return ZATHURA_ERROR_OK when no error occurred, otherwise see
  *    zathura_error_t
  */
-zathura_error_t djvu_document_save_as(zathura_document_t* document, djvu_document_t* djvu_document, const char* path);
+GIRARA_HIDDEN zathura_error_t djvu_document_save_as(zathura_document_t* document, djvu_document_t* djvu_document, const char* path);
 
 /**
  * Initializes the page
@@ -65,7 +65,7 @@ zathura_error_t djvu_document_save_as(zathura_document_t* document, djvu_documen
  * @return ZATHURA_ERROR_OK when no error occurred, otherwise see
  *    zathura_error_t
  */
-zathura_error_t djvu_page_init(zathura_page_t* page, void* data);
+GIRARA_HIDDEN zathura_error_t djvu_page_init(zathura_page_t* page, void* data);
 
 /**
  * Frees a DjVu page
@@ -74,7 +74,7 @@ zathura_error_t djvu_page_init(zathura_page_t* page, void* data);
  * @return ZATHURA_ERROR_OK when no error occurred, otherwise see
  *    zathura_error_t
  */
-zathura_error_t djvu_page_clear(zathura_page_t* page, void* data);
+GIRARA_HIDDEN zathura_error_t djvu_page_clear(zathura_page_t* page, void* data);
 
 /**
  * Searches for a specific text on a page and returns a list of results
@@ -85,7 +85,7 @@ zathura_error_t djvu_page_clear(zathura_page_t* page, void* data);
  *   error occurred
  * @return List of search results or NULL if an error occurred
  */
-girara_list_t* djvu_page_search_text(zathura_page_t* page, void* data, const char* text, zathura_error_t* error);
+GIRARA_HIDDEN girara_list_t* djvu_page_search_text(zathura_page_t* page, void* data, const char* text, zathura_error_t* error);
 
 /**
  * Get text for selection
@@ -96,7 +96,7 @@ girara_list_t* djvu_page_search_text(zathura_page_t* page, void* data, const cha
  * occurred
  * @return The selected text (needs to be deallocated with g_free)
  */
-char* djvu_page_get_text(zathura_page_t* page, void* data, zathura_rectangle_t rectangle, zathura_error_t* error);
+GIRARA_HIDDEN char* djvu_page_get_text(zathura_page_t* page, void* data, zathura_rectangle_t rectangle, zathura_error_t* error);
 
 /**
  * Returns list of links
@@ -106,7 +106,7 @@ char* djvu_page_get_text(zathura_page_t* page, void* data, zathura_rectangle_t r
  * @param error Error code
  * @return List of links or NULL if an error occurred
  */
-girara_list_t* djvu_page_links_get(zathura_page_t* page, void* data,
+GIRARA_HIDDEN girara_list_t* djvu_page_links_get(zathura_page_t* page, void* data,
     zathura_error_t* error);
 
 /**
@@ -118,7 +118,7 @@ girara_list_t* djvu_page_links_get(zathura_page_t* page, void* data,
  *   error occurred
  * @return Image buffer or NULL if an error occurred
  */
-zathura_image_buffer_t* djvu_page_render(zathura_page_t* page, void* data, zathura_error_t* error);
+GIRARA_HIDDEN zathura_image_buffer_t* djvu_page_render(zathura_page_t* page, void* data, zathura_error_t* error);
 
 /**
  * Renders a page onto a cairo object
@@ -129,6 +129,6 @@ zathura_image_buffer_t* djvu_page_render(zathura_page_t* page, void* data, zathu
  * @return ZATHURA_ERROR_OK when no error occurred, otherwise see
  *    zathura_error_t
  */
-zathura_error_t djvu_page_render_cairo(zathura_page_t* page, void* data, cairo_t* cairo, bool printing);
+GIRARA_HIDDEN zathura_error_t djvu_page_render_cairo(zathura_page_t* page, void* data, cairo_t* cairo, bool printing);
 
 #endif // DJVU_H
