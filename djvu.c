@@ -23,16 +23,16 @@ ZATHURA_PLUGIN_REGISTER_WITH_FUNCTIONS(
   VERSION_MAJOR, VERSION_MINOR, VERSION_REV,
   ZATHURA_PLUGIN_FUNCTIONS({
     .document_open           = djvu_document_open,
-    .document_free           = (zathura_plugin_document_free_t) djvu_document_free,
-    .document_index_generate = (zathura_plugin_document_index_generate_t) djvu_document_index_generate,
-    .document_save_as        = (zathura_plugin_document_save_as_t) djvu_document_save_as,
-    .page_init               = (zathura_plugin_page_init_t) djvu_page_init,
-    .page_clear              = (zathura_plugin_page_clear_t) djvu_page_clear,
-    .page_search_text        = (zathura_plugin_page_search_text_t) djvu_page_search_text,
-    .page_get_text           = (zathura_plugin_page_get_text_t) djvu_page_get_text,
-    .page_links_get          = (zathura_plugin_page_links_get_t) djvu_page_links_get,
-    .page_render             = (zathura_plugin_page_render_t) djvu_page_render,
-    .page_render_cairo       = (zathura_plugin_page_render_cairo_t) djvu_page_render_cairo
+    .document_free           = djvu_document_free,
+    .document_index_generate = djvu_document_index_generate,
+    .document_save_as        = djvu_document_save_as,
+    .page_init               = djvu_page_init,
+    .page_clear              = djvu_page_clear,
+    .page_search_text        = djvu_page_search_text,
+    .page_get_text           = djvu_page_get_text,
+    .page_links_get          = djvu_page_links_get,
+    .page_render             = djvu_page_render,
+    .page_render_cairo       = djvu_page_render_cairo
   }),
   ZATHURA_PLUGIN_MIMETYPES({
     "image/vnd.djvu"
@@ -132,8 +132,9 @@ error_out:
 }
 
 zathura_error_t
-djvu_document_free(zathura_document_t* document, djvu_document_t* djvu_document)
+djvu_document_free(zathura_document_t* document, void* data)
 {
+  djvu_document_t* djvu_document = data;
   if (document == NULL) {
     return ZATHURA_ERROR_INVALID_ARGUMENTS;
   }
@@ -149,9 +150,9 @@ djvu_document_free(zathura_document_t* document, djvu_document_t* djvu_document)
 }
 
 girara_tree_node_t*
-djvu_document_index_generate(zathura_document_t* document, djvu_document_t*
-    djvu_document, zathura_error_t* error)
+djvu_document_index_generate(zathura_document_t* document, void* data, zathura_error_t* error)
 {
+  djvu_document_t* djvu_document = data;
   if (document == NULL || djvu_document == NULL) {
     if (error != NULL) {
       *error = ZATHURA_ERROR_INVALID_ARGUMENTS;
@@ -183,8 +184,9 @@ djvu_document_index_generate(zathura_document_t* document, djvu_document_t*
 }
 
 zathura_error_t
-djvu_document_save_as(zathura_document_t* document, djvu_document_t* djvu_document, const char* path)
+djvu_document_save_as(zathura_document_t* document, void* data, const char* path)
 {
+  djvu_document_t* djvu_document = data;
   if (document == NULL || djvu_document == NULL || path == NULL) {
     return ZATHURA_ERROR_INVALID_ARGUMENTS;
   }
@@ -212,7 +214,7 @@ djvu_document_save_as(zathura_document_t* document, djvu_document_t* djvu_docume
 }
 
 zathura_error_t
-djvu_page_init(zathura_page_t* page, void* UNUSED(data))
+djvu_page_init(zathura_page_t* page)
 {
   if (page == NULL) {
     return ZATHURA_ERROR_INVALID_ARGUMENTS;

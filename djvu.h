@@ -34,7 +34,7 @@ GIRARA_HIDDEN zathura_error_t djvu_document_open(zathura_document_t* document);
  * @return ZATHURA_ERROR_OK when no error occurred, otherwise see
  *    zathura_error_t
  */
-GIRARA_HIDDEN zathura_error_t djvu_document_free(zathura_document_t* document, djvu_document_t* djvu_document);
+GIRARA_HIDDEN zathura_error_t djvu_document_free(zathura_document_t* document, void* djvu_document);
 
 /**
  * Generates the index of the document
@@ -46,7 +46,7 @@ GIRARA_HIDDEN zathura_error_t djvu_document_free(zathura_document_t* document, d
  *   no index)
  */
 GIRARA_HIDDEN girara_tree_node_t* djvu_document_index_generate(zathura_document_t* document,
-    djvu_document_t* djvu_document, zathura_error_t* error);
+    void* djvu_document, zathura_error_t* error);
 
 /**
  * Saves the document to the given path
@@ -56,7 +56,7 @@ GIRARA_HIDDEN girara_tree_node_t* djvu_document_index_generate(zathura_document_
  * @return ZATHURA_ERROR_OK when no error occurred, otherwise see
  *    zathura_error_t
  */
-GIRARA_HIDDEN zathura_error_t djvu_document_save_as(zathura_document_t* document, djvu_document_t* djvu_document, const char* path);
+GIRARA_HIDDEN zathura_error_t djvu_document_save_as(zathura_document_t* document, void* djvu_document, const char* path);
 
 /**
  * Initializes the page
@@ -65,7 +65,7 @@ GIRARA_HIDDEN zathura_error_t djvu_document_save_as(zathura_document_t* document
  * @return ZATHURA_ERROR_OK when no error occurred, otherwise see
  *    zathura_error_t
  */
-GIRARA_HIDDEN zathura_error_t djvu_page_init(zathura_page_t* page, void* data);
+GIRARA_HIDDEN zathura_error_t djvu_page_init(zathura_page_t* page);
 
 /**
  * Frees a DjVu page
