@@ -2,11 +2,11 @@
 
 VERSION_MAJOR = 0
 VERSION_MINOR = 2
-VERSION_REV = 6
+VERSION_REV = 7
 VERSION = ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_REV}
 
 # minimum required zathura version
-ZATHURA_MIN_VERSION = 0.2.0
+ZATHURA_MIN_VERSION = 0.3.8
 ZATHURA_VERSION_CHECK ?= $(shell pkg-config --atleast-version=$(ZATHURA_MIN_VERSION) zathura; echo $$?)
 ZATHURA_GTK_VERSION ?= $(shell pkg-config --variable=GTK_VERSION zathura)
 
@@ -34,8 +34,8 @@ ifeq (,${PLUGINDIR})
 PLUGINDIR = ${LIBDIR}/zathura
 endif
 
-INCS = ${GIRARA_INC} ${GLIB_INC} ${DJVU_INC} ${ZATHURA_INC}
-LIBS = ${GIRARA_LIB} ${GLIB_LIB} ${DJVU_LIB}
+INCS = ${GIRARA_INC} ${GLIB_INC} ${DJVU_INC} ${CAIRO_INC} ${ZATHURA_INC}
+LIBS = ${GIRARA_LIB} ${GLIB_LIB} ${DJVU_LIB} ${CAIRO_LIB}
 
 # pre-processor flags
 CPPFLAGS += -D_FILE_OFFSET_BITS=64
@@ -48,9 +48,6 @@ LDFLAGS += -fPIC
 
 # debug
 DFLAGS ?= -g
-
-# build with cairo support?
-WITH_CAIRO ?= 1
 
 # compiler
 CC ?= gcc
