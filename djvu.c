@@ -35,7 +35,8 @@ ZATHURA_PLUGIN_REGISTER_WITH_FUNCTIONS(
     .page_render_cairo       = djvu_page_render_cairo
   }),
   ZATHURA_PLUGIN_MIMETYPES({
-    "image/vnd.djvu"
+    "image/vnd.djvu",
+    "image/vnd.djvu+multipage"
   })
 )
 
