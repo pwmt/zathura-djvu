@@ -1,6 +1,5 @@
 *.o
 *~
-.depend
 djvu.so
 *swp
-zathura-version-check
+build
