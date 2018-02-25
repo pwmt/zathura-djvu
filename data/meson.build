@@ -1,2 +1,2 @@
-install_data('org.pwmt.zathura-pdf-poppler.metainfo.xml', install_dir: metainfodir)
-install_data('org.pwmt.zathura-pdf-poppler.desktop', install_dir: desktopdir)
+install_data('org.pwmt.zathura-djvu.metainfo.xml', install_dir: metainfodir)
+install_data('org.pwmt.zathura-djvu.desktop', install_dir: desktopdir)
