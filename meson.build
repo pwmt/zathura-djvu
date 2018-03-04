@@ -42,8 +42,8 @@ flags = [
 flags = cc.get_supported_arguments(flags)
 
 sources = files(
-  'djvu.c',
-  'page-text.c'
+  'zathura-djvu/djvu.c',
+  'zathura-djvu/page-text.c'
 )
 
 djvu = shared_module('djvu',
