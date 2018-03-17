@@ -1,5 +1,5 @@
 project('zathura-djvu', 'c',
-  version: '0.2.7',
+  version: '0.2.8',
   meson_version: '>=0.43',
   default_options: 'c_std=c11'
 )
