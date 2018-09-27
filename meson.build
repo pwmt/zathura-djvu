@@ -34,6 +34,7 @@ defines = [
   '-DVERSION_MINOR=@0@'.format(version_array[1]),
   '-DVERSION_REV=@0@'.format(version_array[2]),
   '-D_DEFAULT_SOURCE',
+  '-D_GNU_SOURCE',
 ]
 
 # compile flags
