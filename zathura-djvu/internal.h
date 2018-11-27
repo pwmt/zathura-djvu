@@ -1,4 +1,4 @@
-/* See LICENSE file for license and copyright information */
+/* SPDX-License-Identifier: Zlib */
 
 #ifndef DJVU_INTERNAL_H
 #define DJVU_INTERNAL_H
