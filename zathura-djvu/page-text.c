@@ -1,4 +1,4 @@
-/* See LICENSE file for license and copyright information */
+/* SPDX-License-Identifier: Zlib */
 
 #include <libdjvu/miniexp.h>
 #include <string.h>
@@ -146,7 +146,7 @@ djvu_page_text_search(djvu_page_text_t* page_text, const char* text)
   int search_length = strlen(text);
   char* tmp  = page_text->content;
 
-  while ((tmp = strstr(tmp, text)) != NULL) {
+  while ((tmp = strcasestr(tmp, text)) != NULL) {
     int start_pointer = tmp - page_text->content;
     int end_pointer   = start_pointer + search_length - 1;
 
@@ -204,6 +204,7 @@ error_free:
 
   if (page_text->text_positions != NULL) {
     girara_list_free(page_text->text_positions);
+    page_text->text_positions = NULL;
   }
 
   if (page_text->content != NULL) {

@@ -1,5 +1,5 @@
 project('zathura-djvu', 'c',
-  version: '0.2.8',
+  version: '0.2.9',
   meson_version: '>=0.43',
   default_options: 'c_std=c11'
 )
@@ -22,12 +22,19 @@ djvu = dependency('ddjvuapi')
 
 build_dependencies = [zathura, girara, glib, cairo, djvu]
 
+if get_option('plugindir') == ''
+  plugindir = zathura.get_pkgconfig_variable('plugindir')
+else
+  plugindir = get_option('plugindir')
+endif
+
 # defines
 defines = [
   '-DVERSION_MAJOR=@0@'.format(version_array[0]),
   '-DVERSION_MINOR=@0@'.format(version_array[1]),
   '-DVERSION_REV=@0@'.format(version_array[2]),
   '-D_DEFAULT_SOURCE',
+  '-D_GNU_SOURCE',
 ]
 
 # compile flags
@@ -51,7 +58,7 @@ djvu = shared_module('djvu',
   dependencies: build_dependencies,
   c_args: defines + flags,
   install: true,
-  install_dir: zathura.get_pkgconfig_variable('plugindir')
+  install_dir: plugindir
 )
 
 subdir('data')
