@@ -204,6 +204,7 @@ error_free:
 
   if (page_text->text_positions != NULL) {
     girara_list_free(page_text->text_positions);
+    page_text->text_positions = NULL;
   }
 
   if (page_text->content != NULL) {
