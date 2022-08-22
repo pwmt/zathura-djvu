@@ -1,6 +1,6 @@
 project('zathura-djvu', 'c',
   version: '0.2.9',
-  meson_version: '>=0.43',
+  meson_version: '>=0.56',
   default_options: 'c_std=c11'
 )
 
@@ -23,7 +23,7 @@ djvu = dependency('ddjvuapi')
 build_dependencies = [zathura, girara, glib, cairo, djvu]
 
 if get_option('plugindir') == ''
-  plugindir = zathura.get_pkgconfig_variable('plugindir')
+  plugindir = zathura.get_variable(pkgconfig: 'plugindir')
 else
   plugindir = get_option('plugindir')
 endif
