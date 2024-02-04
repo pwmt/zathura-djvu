@@ -100,6 +100,9 @@ GIRARA_HIDDEN girara_list_t* djvu_page_search_text(zathura_page_t* page, void* d
 GIRARA_HIDDEN char* djvu_page_get_text(zathura_page_t* page, void* data, zathura_rectangle_t rectangle,
                                        zathura_error_t* error);
 
+GIRARA_HIDDEN girara_list_t* djvu_page_get_selection(zathura_page_t* page, void* data, zathura_rectangle_t rectangle,
+                                                     zathura_error_t* error);
+
 /**
  * Returns list of links
  *
