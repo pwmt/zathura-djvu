@@ -28,6 +28,7 @@ ZATHURA_PLUGIN_REGISTER_WITH_FUNCTIONS("djvu", VERSION_MAJOR, VERSION_MINOR, VER
                                            .page_clear              = djvu_page_clear,
                                            .page_search_text        = djvu_page_search_text,
                                            .page_get_text           = djvu_page_get_text,
+                                           .page_get_selection      = djvu_page_get_selection,
                                            .page_links_get          = djvu_page_links_get,
                                            .page_render             = djvu_page_render,
                                            .page_render_cairo       = djvu_page_render_cairo,
@@ -59,7 +60,7 @@ zathura_error_t djvu_document_open(zathura_document_t* document) {
       0xFF000000,
   };
 
-  djvu_document->format        = ddjvu_format_create(DDJVU_FORMAT_RGBMASK32, 4, masks);
+  djvu_document->format = ddjvu_format_create(DDJVU_FORMAT_RGBMASK32, 4, masks);
   if (djvu_document->format == NULL) {
     error = ZATHURA_ERROR_UNKNOWN;
     goto error_free;
@@ -353,6 +354,29 @@ error_ret:
     *error = ZATHURA_ERROR_UNKNOWN;
   }
 
+  return NULL;
+}
+
+girara_list_t* djvu_page_get_selection(zathura_page_t* UNUSED(page), void* UNUSED(data), zathura_rectangle_t rectangle,
+                                       zathura_error_t* error) {
+  girara_list_t* list = girara_list_new2(g_free);
+  if (list == NULL) {
+    if (error != NULL) {
+      *error = ZATHURA_ERROR_OUT_OF_MEMORY;
+    }
+    goto error_free;
+  }
+
+  zathura_rectangle_t* rect = g_malloc0(sizeof(zathura_rectangle_t));
+  *rect                     = rectangle;
+  girara_list_append(list, rect);
+
+  return list;
+
+error_free:
+  if (list != NULL) {
+    girara_list_free(list);
+  }
   return NULL;
 }
 
