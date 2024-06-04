@@ -52,7 +52,7 @@ zathura_error_t djvu_document_open(zathura_document_t* document) {
   }
 
   /* setup format */
-  static const unsigned int masks[4] = {
+  static unsigned int masks[4] = {
       0x00FF0000,
       0x0000FF00,
       0x000000FF,
