@@ -29,7 +29,6 @@ ZATHURA_PLUGIN_REGISTER_WITH_FUNCTIONS("djvu", VERSION_MAJOR, VERSION_MINOR, VER
                                            .page_search_text        = djvu_page_search_text,
                                            .page_get_text           = djvu_page_get_text,
                                            .page_links_get          = djvu_page_links_get,
-                                           .page_render             = djvu_page_render,
                                            .page_render_cairo       = djvu_page_render_cairo,
                                        }),
                                        ZATHURA_PLUGIN_MIMETYPES({
@@ -517,76 +516,6 @@ zathura_error_t djvu_page_render_cairo(zathura_page_t* page, void* UNUSED(data),
   ddjvu_page_release(djvu_page);
 
   return ZATHURA_ERROR_OK;
-}
-
-zathura_image_buffer_t* djvu_page_render(zathura_page_t* page, void* UNUSED(data), zathura_error_t* error) {
-  if (page == NULL) {
-    if (error != NULL) {
-      *error = ZATHURA_ERROR_INVALID_ARGUMENTS;
-    }
-    return NULL;
-  }
-
-  zathura_document_t* document = zathura_page_get_document(page);
-  if (document == NULL) {
-    return NULL;
-  }
-
-  /* calculate sizes */
-  unsigned int page_width  = zathura_document_get_scale(document) * zathura_page_get_width(page);
-  unsigned int page_height = zathura_document_get_scale(document) * zathura_page_get_height(page);
-
-  if (page_width == 0 || page_height == 0) {
-    if (error != NULL) {
-      *error = ZATHURA_ERROR_UNKNOWN;
-    }
-    goto error_out;
-  }
-
-  /* init ddjvu render data */
-  djvu_document_t* djvu_document = zathura_document_get_data(document);
-  ddjvu_page_t* djvu_page        = ddjvu_page_create_by_pageno(djvu_document->document, zathura_page_get_index(page));
-
-  if (djvu_page == NULL) {
-    if (error != NULL) {
-      *error = ZATHURA_ERROR_UNKNOWN;
-    }
-    goto error_out;
-  }
-
-  while (!ddjvu_page_decoding_done(djvu_page)) {
-    handle_messages(djvu_document, true);
-  }
-
-  ddjvu_rect_t rrect = {0, 0, page_width, page_height};
-  ddjvu_rect_t prect = {0, 0, page_width, page_height};
-
-  zathura_image_buffer_t* image_buffer = zathura_image_buffer_create(page_width, page_height);
-
-  if (image_buffer == NULL) {
-    if (error != NULL) {
-      *error = ZATHURA_ERROR_OUT_OF_MEMORY;
-    }
-    goto error_free;
-  }
-
-  /* set rotation */
-  ddjvu_page_set_rotation(djvu_page, DDJVU_ROTATE_0);
-
-  /* render page */
-  ddjvu_page_render(djvu_page, DDJVU_RENDER_COLOR, &prect, &rrect, djvu_document->format, 3 * page_width,
-                    (char*)image_buffer->data);
-
-  return image_buffer;
-
-error_free:
-
-  ddjvu_page_release(djvu_page);
-  zathura_image_buffer_free(image_buffer);
-
-error_out:
-
-  return NULL;
 }
 
 static const char* get_extension(const char* path) {
