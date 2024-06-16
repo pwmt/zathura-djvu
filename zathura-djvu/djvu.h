@@ -110,17 +110,6 @@ GIRARA_HIDDEN girara_list_t* djvu_page_links_get(zathura_page_t* page, void* dat
     zathura_error_t* error);
 
 /**
- * Renders a page and returns a allocated image buffer which has to be freed
- * with zathura_image_buffer_free
- *
- * @param page Page
- * @param error Set to an error value (see zathura_error_t) if an
- *   error occurred
- * @return Image buffer or NULL if an error occurred
- */
-GIRARA_HIDDEN zathura_image_buffer_t* djvu_page_render(zathura_page_t* page, void* data, zathura_error_t* error);
-
-/**
  * Renders a page onto a cairo object
  *
  * @param page Page
