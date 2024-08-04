@@ -13,28 +13,20 @@
  */
 typedef struct text_position_s {
   unsigned int position; /**< Index */
-  miniexp_t exp; /**< Correspondending expression */
+  miniexp_t exp;         /**< Correspondending expression */
 } text_position_t;
 
 /* forward declaration */
-static void djvu_page_text_content_append(djvu_page_text_t* page_text,
-    miniexp_t exp);
-static miniexp_t text_position_get_exp(djvu_page_text_t* page_text,
-    unsigned int index);
-static bool djvu_page_text_build_rectangle(djvu_page_text_t* page_text,
-    miniexp_t exp, miniexp_t start, miniexp_t end);
-static bool djvu_page_text_build_rectangle_process(djvu_page_text_t* page_text,
-    miniexp_t exp, miniexp_t start, miniexp_t end);
-static void djvu_page_text_limit(djvu_page_text_t* page_text, miniexp_t exp,
-    zathura_rectangle_t* rectangle);
-static void djvu_page_text_limit_process(djvu_page_text_t* page_text,
-    miniexp_t exp, zathura_rectangle_t* rectangle);
-static bool djvu_page_text_select_content(djvu_page_text_t* page_text,
-    miniexp_t exp, int delimiter);
+static void djvu_page_text_content_append(djvu_page_text_t* page_text, miniexp_t exp);
+static miniexp_t text_position_get_exp(djvu_page_text_t* page_text, unsigned int index);
+static bool djvu_page_text_build_rectangle(djvu_page_text_t* page_text, miniexp_t exp, miniexp_t start, miniexp_t end);
+static bool djvu_page_text_build_rectangle_process(djvu_page_text_t* page_text, miniexp_t exp, miniexp_t start,
+                                                   miniexp_t end);
+static void djvu_page_text_limit(djvu_page_text_t* page_text, miniexp_t exp, zathura_rectangle_t* rectangle);
+static void djvu_page_text_limit_process(djvu_page_text_t* page_text, miniexp_t exp, zathura_rectangle_t* rectangle);
+static bool djvu_page_text_select_content(djvu_page_text_t* page_text, miniexp_t exp, int delimiter);
 
-djvu_page_text_t*
-djvu_page_text_new(djvu_document_t* document, zathura_page_t* page)
-{
+djvu_page_text_t* djvu_page_text_new(djvu_document_t* document, zathura_page_t* page) {
   if (document == NULL || document->document == NULL || page == NULL) {
     goto error_ret;
   }
@@ -52,8 +44,7 @@ djvu_page_text_new(djvu_document_t* document, zathura_page_t* page)
 
   /* read page text */
   while ((page_text->text_information =
-        ddjvu_document_get_pagetext(document->document, zathura_page_get_index(page), "char"))
-      == miniexp_dummy) {
+              ddjvu_document_get_pagetext(document->document, zathura_page_get_index(page), "char")) == miniexp_dummy) {
     handle_messages(document, true);
   }
 
@@ -74,16 +65,13 @@ error_ret:
   return NULL;
 }
 
-void
-djvu_page_text_free(djvu_page_text_t* page_text)
-{
+void djvu_page_text_free(djvu_page_text_t* page_text) {
   if (page_text == NULL) {
     return;
   }
 
   if (page_text->text_information != miniexp_nil && page_text->document != NULL) {
-    ddjvu_miniexp_release(page_text->document->document,
-        page_text->text_information);
+    ddjvu_miniexp_release(page_text->document->document, page_text->text_information);
   }
 
   if (page_text->content != NULL) {
@@ -101,9 +89,7 @@ djvu_page_text_free(djvu_page_text_t* page_text)
   free(page_text);
 }
 
-girara_list_t*
-djvu_page_text_search(djvu_page_text_t* page_text, const char* text)
-{
+girara_list_t* djvu_page_text_search(djvu_page_text_t* page_text, const char* text) {
   if (page_text == NULL || text == NULL) {
     goto error_ret;
   }
@@ -120,16 +106,14 @@ djvu_page_text_search(djvu_page_text_t* page_text, const char* text)
   }
 
   /* create result list */
-  girara_list_t* results = girara_list_new2(
-      (girara_free_function_t) free);
+  girara_list_t* results = girara_list_new2((girara_free_function_t)free);
 
   if (results == NULL) {
     goto error_ret;
   }
 
   /* create list */
-  page_text->text_positions = girara_list_new2(
-      (girara_free_function_t) free);
+  page_text->text_positions = girara_list_new2((girara_free_function_t)free);
 
   if (page_text->text_positions == NULL) {
     goto error_free;
@@ -144,7 +128,7 @@ djvu_page_text_search(djvu_page_text_t* page_text, const char* text)
 
   /* search through content */
   int search_length = strlen(text);
-  char* tmp  = page_text->content;
+  char* tmp         = page_text->content;
 
   while ((tmp = strcasestr(tmp, text)) != NULL) {
     int start_pointer = tmp - page_text->content;
@@ -159,8 +143,7 @@ djvu_page_text_search(djvu_page_text_t* page_text, const char* text)
       page_text->rectangle = NULL;
     }
 
-    djvu_page_text_build_rectangle(page_text, page_text->text_information,
-        start, end);
+    djvu_page_text_build_rectangle(page_text, page_text->text_information, start, end);
 
     if (page_text->rectangle == NULL) {
       tmp += search_length;
@@ -174,7 +157,7 @@ djvu_page_text_search(djvu_page_text_t* page_text, const char* text)
     page_text->rectangle->y2 = ZATHURA_DJVU_SCALE * page_text->rectangle->y2;
 
     /* invert */
-    int y1 = zathura_page_get_height(page_text->page) - page_text->rectangle->y1;
+    int y1                   = zathura_page_get_height(page_text->page) - page_text->rectangle->y1;
     page_text->rectangle->y1 = zathura_page_get_height(page_text->page) - page_text->rectangle->y2;
     page_text->rectangle->y2 = y1;
 
@@ -217,9 +200,7 @@ error_ret:
   return NULL;
 }
 
-static void
-djvu_page_text_content_append(djvu_page_text_t* page_text, miniexp_t exp)
-{
+static void djvu_page_text_content_append(djvu_page_text_t* page_text, miniexp_t exp) {
   if (page_text == NULL || exp == miniexp_nil) {
     return;
   }
@@ -241,15 +222,14 @@ djvu_page_text_content_append(djvu_page_text_t* page_text, miniexp_t exp)
           continue;
         }
 
-        position->position = (page_text->content != NULL) ?
-          strlen(page_text->content) : 0;
-        position->exp = exp;
+        position->position = (page_text->content != NULL) ? strlen(page_text->content) : 0;
+        position->exp      = exp;
 
         girara_list_append(page_text->text_positions, position);
       }
 
       /* append text */
-      char* text = (char*) miniexp_to_str(data);
+      char* text = (char*)miniexp_to_str(data);
 
       if (page_text->content == NULL) {
         page_text->content = g_strdup(text);
@@ -258,7 +238,7 @@ djvu_page_text_content_append(djvu_page_text_t* page_text, miniexp_t exp)
         g_free(page_text->content);
         page_text->content = tmp;
       }
-    /* not a string, recursive call */
+      /* not a string, recursive call */
     } else {
       djvu_page_text_content_append(page_text, data);
     }
@@ -268,9 +248,7 @@ djvu_page_text_content_append(djvu_page_text_t* page_text, miniexp_t exp)
   }
 }
 
-static miniexp_t
-text_position_get_exp(djvu_page_text_t* page_text, unsigned int index)
-{
+static miniexp_t text_position_get_exp(djvu_page_text_t* page_text, unsigned int index) {
   if (page_text == NULL || page_text->text_positions == NULL) {
     goto error_ret;
   }
@@ -312,10 +290,8 @@ error_ret:
   return miniexp_nil;
 }
 
-static bool
-djvu_page_text_build_rectangle_process(djvu_page_text_t* page_text, miniexp_t exp,
-    miniexp_t start, miniexp_t end)
-{
+static bool djvu_page_text_build_rectangle_process(djvu_page_text_t* page_text, miniexp_t exp, miniexp_t start,
+                                                   miniexp_t end) {
   if (page_text == NULL) {
     goto error_ret;
   }
@@ -365,10 +341,7 @@ error_ret:
   return false;
 }
 
-static bool
-djvu_page_text_build_rectangle(djvu_page_text_t* page_text, miniexp_t exp,
-    miniexp_t start, miniexp_t end)
-{
+static bool djvu_page_text_build_rectangle(djvu_page_text_t* page_text, miniexp_t exp, miniexp_t start, miniexp_t end) {
   if (page_text == NULL) {
     goto error_ret;
   }
@@ -382,8 +355,7 @@ djvu_page_text_build_rectangle(djvu_page_text_t* page_text, miniexp_t exp,
     miniexp_t data = miniexp_car(inner);
 
     if (miniexp_stringp(data) != 0) {
-      if (djvu_page_text_build_rectangle_process(page_text,
-            exp, start, end) == false) {
+      if (djvu_page_text_build_rectangle_process(page_text, exp, start, end) == false) {
         goto error_ret;
       }
     } else {
@@ -402,9 +374,7 @@ error_ret:
   return false;
 }
 
-char*
-djvu_page_text_select(djvu_page_text_t* page_text, zathura_rectangle_t rectangle)
-{
+char* djvu_page_text_select(djvu_page_text_t* page_text, zathura_rectangle_t rectangle) {
   if (page_text == NULL) {
     return NULL;
   }
@@ -415,18 +385,15 @@ djvu_page_text_select(djvu_page_text_t* page_text, zathura_rectangle_t rectangle
   return (page_text->content != NULL) ? g_strdup(page_text->content) : NULL;
 }
 
-static void
-djvu_page_text_limit_process(djvu_page_text_t* page_text, miniexp_t exp,
-    zathura_rectangle_t* rectangle)
-{
+static void djvu_page_text_limit_process(djvu_page_text_t* page_text, miniexp_t exp, zathura_rectangle_t* rectangle) {
   zathura_rectangle_t current_rectangle;
   current_rectangle.x1 = miniexp_to_int(miniexp_nth(1, exp));
   current_rectangle.y1 = miniexp_to_int(miniexp_nth(2, exp));
   current_rectangle.x2 = miniexp_to_int(miniexp_nth(3, exp));
   current_rectangle.y2 = miniexp_to_int(miniexp_nth(4, exp));
 
-  if (current_rectangle.x2 >= rectangle->x1 && current_rectangle.y1 <= rectangle->y2
-      && current_rectangle.x1 <= rectangle->x2 && current_rectangle.y2 >= rectangle->y1) {
+  if (current_rectangle.x2 >= rectangle->x1 && current_rectangle.y1 <= rectangle->y2 &&
+      current_rectangle.x1 <= rectangle->x2 && current_rectangle.y2 >= rectangle->y1) {
     if (page_text->begin == miniexp_nil) {
       page_text->begin = exp;
     }
@@ -435,10 +402,7 @@ djvu_page_text_limit_process(djvu_page_text_t* page_text, miniexp_t exp,
   }
 }
 
-static void
-djvu_page_text_limit(djvu_page_text_t* page_text, miniexp_t exp,
-    zathura_rectangle_t* rectangle)
-{
+static void djvu_page_text_limit(djvu_page_text_t* page_text, miniexp_t exp, zathura_rectangle_t* rectangle) {
   if (page_text == NULL || rectangle == NULL) {
     return;
   }
@@ -459,12 +423,9 @@ djvu_page_text_limit(djvu_page_text_t* page_text, miniexp_t exp,
 
     inner = miniexp_cdr(inner);
   }
-
 }
 
-static bool
-djvu_page_text_select_content(djvu_page_text_t* page_text, miniexp_t exp, int delimiter)
-{
+static bool djvu_page_text_select_content(djvu_page_text_t* page_text, miniexp_t exp, int delimiter) {
   if (page_text == NULL) {
     return false;
   }
@@ -483,15 +444,13 @@ djvu_page_text_select_content(djvu_page_text_t* page_text, miniexp_t exp, int de
 
     if (miniexp_stringp(data) != 0) {
       if (page_text->content != NULL || exp == page_text->begin) {
-        char* token_content = (char*) miniexp_to_str(miniexp_nth(5, exp));
+        char* token_content = (char*)miniexp_to_str(miniexp_nth(5, exp));
 
         if (page_text->content != NULL) {
-          char* content = g_strjoin(
-              (delimiter & 2) ? "\n" : (delimiter & 1) ? " " : NULL,
-              page_text->content,
-              token_content,
-              NULL
-              );
+          char* content = g_strjoin((delimiter & 2)   ? "\n"
+                                    : (delimiter & 1) ? " "
+                                                      : NULL,
+                                    page_text->content, token_content, NULL);
           g_free(page_text->content);
           page_text->content = content;
         } else {
