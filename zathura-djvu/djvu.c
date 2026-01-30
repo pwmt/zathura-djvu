@@ -358,7 +358,7 @@ error_ret:
 
 girara_list_t* djvu_page_get_selection(zathura_page_t* UNUSED(page), void* UNUSED(data), zathura_rectangle_t rectangle,
                                        zathura_error_t* error) {
-  girara_list_t* list = girara_list_new2(g_free);
+  girara_list_t* list = girara_list_new_with_free(g_free);
   if (list == NULL) {
     if (error != NULL) {
       *error = ZATHURA_ERROR_OUT_OF_MEMORY;
@@ -392,7 +392,7 @@ girara_list_t* djvu_page_links_get(zathura_page_t* page, void* UNUSED(data), zat
     goto error_ret;
   }
 
-  girara_list_t* list = girara_list_new2((girara_free_function_t)zathura_link_free);
+  girara_list_t* list = girara_list_new_with_free((girara_free_function_t)zathura_link_free);
   if (list == NULL) {
     if (error != NULL) {
       *error = ZATHURA_ERROR_OUT_OF_MEMORY;

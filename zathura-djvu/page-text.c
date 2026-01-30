@@ -106,14 +106,14 @@ girara_list_t* djvu_page_text_search(djvu_page_text_t* page_text, const char* te
   }
 
   /* create result list */
-  girara_list_t* results = girara_list_new2((girara_free_function_t)free);
+  girara_list_t* results = girara_list_new_with_free((girara_free_function_t)free);
 
   if (results == NULL) {
     goto error_ret;
   }
 
   /* create list */
-  page_text->text_positions = girara_list_new2((girara_free_function_t)free);
+  page_text->text_positions = girara_list_new_with_free((girara_free_function_t)free);
 
   if (page_text->text_positions == NULL) {
     goto error_free;
