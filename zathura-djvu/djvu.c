@@ -111,6 +111,10 @@ zathura_error_t djvu_document_open(zathura_document_t* document) {
 
 error_free:
 
+  if (djvu_document->document != NULL) {
+    ddjvu_document_release(djvu_document->document);
+  }
+
   if (djvu_document->format != NULL) {
     ddjvu_format_release(djvu_document->format);
   }
@@ -191,6 +195,10 @@ zathura_error_t djvu_document_save_as(zathura_document_t* document, void* data, 
     job = ddjvu_document_print(djvu_document->document, fp, 0, NULL);
   } else {
     job = ddjvu_document_save(djvu_document->document, fp, 0, NULL);
+  }
+  if (job == NULL) {
+    fclose(fp);
+    return ZATHURA_ERROR_UNKNOWN;
   }
   while (ddjvu_job_done(job) != true) {
     handle_messages(djvu_document, true);
@@ -413,6 +421,10 @@ girara_list_t* djvu_page_links_get(zathura_page_t* page, void* UNUSED(data), zat
   }
 
   miniexp_t* hyperlinks = ddjvu_anno_get_hyperlinks(annotations);
+  if (hyperlinks == NULL) {
+    ddjvu_miniexp_release(djvu_document->document, annotations);
+    goto error_free;
+  }
   for (miniexp_t* iter = hyperlinks; *iter != NULL; iter++) {
     if (miniexp_car(*iter) != miniexp_symbol("maparea")) {
       continue;
@@ -475,6 +487,9 @@ girara_list_t* djvu_page_links_get(zathura_page_t* page, void* UNUSED(data), zat
       girara_list_append(list, link);
     }
   }
+
+  free(hyperlinks);
+  ddjvu_miniexp_release(djvu_document->document, annotations);
 
   return list;
 
