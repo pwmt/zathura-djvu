@@ -18,7 +18,7 @@ static bool exp_to_str(miniexp_t expression, const char** string);
 static bool exp_to_int(miniexp_t expression, int* integer);
 static bool exp_to_rect(miniexp_t expression, zathura_rectangle_t* rect);
 
-ZATHURA_PLUGIN_REGISTER_WITH_FUNCTIONS("djvu", VERSION_MAJOR, VERSION_MINOR, VERSION_REV,
+ZATHURA_PLUGIN_REGISTER_WITH_FUNCTIONS("djvu", VERSION,
                                        ZATHURA_PLUGIN_FUNCTIONS({
                                            .document_open           = djvu_document_open,
                                            .document_free           = djvu_document_free,
