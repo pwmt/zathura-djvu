@@ -29,6 +29,7 @@ ZATHURA_PLUGIN_REGISTER_WITH_FUNCTIONS("djvu", VERSION,
                                            .page_search_text        = djvu_page_search_text,
                                            .page_get_text           = djvu_page_get_text,
                                            .page_get_selection      = djvu_page_get_selection,
+                                           .page_get_text_layout    = djvu_page_get_text_layout,
                                            .page_links_get          = djvu_page_links_get,
                                            .page_render_cairo       = djvu_page_render_cairo,
                                        }),
@@ -767,4 +768,146 @@ static bool exp_to_rect(miniexp_t expression, zathura_rectangle_t* rect) {
   }
 
   return true;
+}
+
+/* text and character boxes of the hidden text of a page; the first pass only counts them, the second one fills
+ * them in */
+typedef struct djvu_text_layout_s {
+  char* text;                 /**< UTF-8 text, NULL while counting */
+  zathura_rectangle_t* rects; /**< One box per character, NULL while counting */
+  size_t length;              /**< Bytes of text */
+  size_t n_rects;             /**< Number of characters */
+  zathura_rectangle_t last;   /**< Box of the last character */
+  double page_height;         /**< Page height in DjVu units */
+  char separator;             /**< Separator to add before the next character: ' ', '\n' or 0 */
+} djvu_text_layout_t;
+
+static void djvu_text_layout_add(djvu_text_layout_t* layout, gunichar c, zathura_rectangle_t rect) {
+  if (layout->text != NULL) {
+    layout->rects[layout->n_rects] = rect;
+  }
+  layout->length += g_unichar_to_utf8(c, layout->text != NULL ? layout->text + layout->length : NULL);
+  layout->n_rects++;
+  layout->last = rect;
+}
+
+static void djvu_text_layout_append(djvu_text_layout_t* layout, gunichar c, zathura_rectangle_t rect) {
+  /* the separator between words spans the gap between them */
+  if (layout->separator != 0 && layout->n_rects != 0) {
+    const zathura_rectangle_t prev = layout->last;
+    zathura_rectangle_t gap        = {prev.x2, prev.y1, prev.x2, prev.y1};
+    if (layout->separator == ' ') {
+      gap.x2 = rect.x1 > prev.x2 ? rect.x1 : prev.x2;
+      gap.y2 = prev.y2;
+    }
+    djvu_text_layout_add(layout, layout->separator, gap);
+  }
+  layout->separator = 0;
+
+  djvu_text_layout_add(layout, c, rect);
+}
+
+/* a zone is (type x1 y1 x2 y2 children...), the children are zones or the text of the zone */
+static void djvu_text_layout_zone(djvu_text_layout_t* layout, miniexp_t zone) {
+  if (miniexp_consp(zone) == 0 || miniexp_symbolp(miniexp_car(zone)) == 0) {
+    return;
+  }
+
+  const char* type = miniexp_to_name(miniexp_car(zone));
+  int coords[4]    = {0};
+  miniexp_t inner  = miniexp_cdr(zone);
+  for (int idx = 0; idx < 4; ++idx) {
+    if (miniexp_numberp(miniexp_car(inner)) == 0) {
+      return;
+    }
+    coords[idx] = miniexp_to_int(miniexp_car(inner));
+    inner       = miniexp_cdr(inner);
+  }
+
+  /* DjVu has its origin at the bottom left */
+  const zathura_rectangle_t box = {
+      .x1 = coords[0] * ZATHURA_DJVU_SCALE,
+      .y1 = (layout->page_height - coords[3]) * ZATHURA_DJVU_SCALE,
+      .x2 = coords[2] * ZATHURA_DJVU_SCALE,
+      .y2 = (layout->page_height - coords[1]) * ZATHURA_DJVU_SCALE,
+  };
+
+  for (; inner != miniexp_nil; inner = miniexp_cdr(inner)) {
+    miniexp_t child = miniexp_car(inner);
+    if (miniexp_stringp(child) == 0) {
+      djvu_text_layout_zone(layout, child);
+      continue;
+    }
+
+    /* the text of the zone: split its box evenly when it holds more than one character */
+    const char* str = miniexp_to_str(child);
+    if (g_utf8_validate(str, -1, NULL) == FALSE) {
+      continue;
+    }
+    const glong n      = g_utf8_strlen(str, -1);
+    const double width = n > 0 ? (box.x2 - box.x1) / n : 0;
+    glong idx          = 0;
+    for (const char* ptr = str; *ptr != '\0'; ptr = g_utf8_next_char(ptr), ++idx) {
+      const gunichar c = g_utf8_get_char(ptr);
+      if (c == '\n') {
+        continue;
+      }
+      const zathura_rectangle_t rect = {box.x1 + idx * width, box.y1, box.x1 + (idx + 1) * width, box.y2};
+      djvu_text_layout_append(layout, c, rect);
+    }
+  }
+
+  /* words are separated by blanks, lines and larger zones by newlines */
+  if (g_strcmp0(type, "word") == 0) {
+    if (layout->separator == 0) {
+      layout->separator = ' ';
+    }
+  } else if (g_strcmp0(type, "char") != 0) {
+    layout->separator = '\n';
+  }
+}
+
+zathura_error_t djvu_page_get_text_layout(zathura_page_t* page, void* UNUSED(data), zathura_text_layout_t* layout) {
+  if (page == NULL || layout == NULL) {
+    return ZATHURA_ERROR_INVALID_ARGUMENTS;
+  }
+
+  zathura_document_t* document = zathura_page_get_document(page);
+  if (document == NULL) {
+    return ZATHURA_ERROR_UNKNOWN;
+  }
+  djvu_document_t* djvu_document = zathura_document_get_data(document);
+
+  miniexp_t text = miniexp_nil;
+  while ((text = ddjvu_document_get_pagetext(djvu_document->document, zathura_page_get_index(page), "char")) ==
+         miniexp_dummy) {
+    handle_messages(djvu_document, true);
+  }
+
+  djvu_text_layout_t collected = {
+      .page_height = zathura_page_get_height(page) / ZATHURA_DJVU_SCALE,
+  };
+
+  /* pages without hidden text have an empty layout */
+  if (text != miniexp_nil) {
+    djvu_text_layout_zone(&collected, text);
+  }
+
+  const size_t length  = collected.length;
+  const size_t n_rects = collected.n_rects;
+  collected.text       = g_malloc(length + 1);
+  collected.rects      = g_malloc0((n_rects > 0 ? n_rects : 1) * sizeof(zathura_rectangle_t));
+  collected.length     = 0;
+  collected.n_rects    = 0;
+  collected.separator  = 0;
+  if (text != miniexp_nil) {
+    djvu_text_layout_zone(&collected, text);
+    ddjvu_miniexp_release(djvu_document->document, text);
+  }
+
+  collected.text[length] = '\0';
+  layout->text           = collected.text;
+  layout->rects          = collected.rects;
+  layout->n_rects        = n_rects;
+  return ZATHURA_ERROR_OK;
 }

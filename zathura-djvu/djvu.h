@@ -104,6 +104,18 @@ GIRARA_HIDDEN girara_list_t* djvu_page_get_selection(zathura_page_t* page, void*
                                                      zathura_error_t* error);
 
 /**
+ * Get the text layout of a page
+ *
+ * @param page Page
+ * @param data Custom data
+ * @param layout Set to the page text and the bounding box of each character
+ * @return ZATHURA_ERROR_OK when no error occurred, otherwise see
+ *    zathura_error_t
+ */
+GIRARA_HIDDEN zathura_error_t djvu_page_get_text_layout(zathura_page_t* page, void* data,
+                                                        zathura_text_layout_t* layout);
+
+/**
  * Returns list of links
  *
  * @param page The page
